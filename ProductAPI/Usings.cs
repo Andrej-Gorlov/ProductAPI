@@ -1,0 +1,9 @@
+﻿global using AutoMapper;
+global using ProductAPI.Domain.Entity;
+global using ProductAPI.Domain.Entity.CategoryDTO;
+global using ProductAPI.Domain.Entity.ImageDTO;
+global using ProductAPI.Domain.Entity.ProductDTO;
+global using Microsoft.AspNetCore.Mvc;
+global using ProductAPI.Domain.Response;
+global using ProductAPI.Service.Interfaces;
+global using WatchDog;
