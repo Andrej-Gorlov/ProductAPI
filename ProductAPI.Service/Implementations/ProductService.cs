@@ -5,12 +5,14 @@ namespace ProductAPI.Service.Implementations
     public class ProductService : IProductService
     {
         private IProductRepository _productRep;
+        private ICategoryRepository _categoryRep;
         private IMapper _mapper;
         private BaseResponse<ProductDTO> baseResponse;
         private string message = "";
-        public ProductService(IProductRepository productRep, IMapper mapper)
+        public ProductService(IProductRepository productRep, ICategoryRepository categoryRep, IMapper mapper)
         {
             _productRep = productRep;
+            _categoryRep = categoryRep;
             _mapper = mapper;
             baseResponse = new();
         }
@@ -27,6 +29,13 @@ namespace ProductAPI.Service.Implementations
                 WatchLogger.Log("Продукт с таким наименованием существует.");
                 baseResponse.DisplayMessage = "Продукт с таким наименованием существует.";
                 baseResponse.Status = Status.ExistsName;
+                return baseResponse;
+            }
+            if (await _productRep.GetByAsync(x => x.MainImageUrl == createModel.MainImageUrl) != null)
+            {
+                WatchLogger.Log("Продукт с таким url адрессом изображения существует.");
+                baseResponse.DisplayMessage = "Продукт с таким url адрессом изображения существует.";
+                baseResponse.Status = Status.ExistsUrl;
                 return baseResponse;
             }
             var product = await _productRep.CreateAsync(_mapper.Map<Product>(createModel));
@@ -53,7 +62,7 @@ namespace ProductAPI.Service.Implementations
             WatchLogger.Log($"Удаление продукта. / method: DeleteServiceAsync");
             var baseResponse = new BaseResponse<bool>();
             WatchLogger.Log($"Поиск продукта по id: {id}. / method: DeleteServiceAsync");
-            Product product = await _productRep.GetByAsync(x => x.CategoryId == id, true);
+            Product product = await _productRep.GetByAsync(x => x.ProductId == id, true);
             if (product is null)
             {
                 WatchLogger.Log($"Продукт c id: {id} не найден.");

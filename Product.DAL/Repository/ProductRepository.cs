@@ -48,7 +48,13 @@ namespace ProductAPI.DAL.Repository
                 products = products.AsNoTracking();
             }
             WatchLogger.Log($"Возвращен отфильтрованный список. Filter: {filter.Body},Type: {filter.Type}.");
-            return await products.FirstOrDefaultAsync(filter);
+            return await products.Include(x=>x.Category). FirstOrDefaultAsync(filter);
+        }
+
+        public async Task<Product> DescendingIdAsync()
+        {
+            IQueryable<Product> product = _db.Products.OrderByDescending(x => x.ProductId);
+            return await product.FirstOrDefaultAsync();
         }
     }
 }

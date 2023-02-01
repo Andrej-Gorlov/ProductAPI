@@ -14,7 +14,7 @@ namespace ProductAPI.DAL.Repository
 
         public async Task<T> CreateAsync(T entity)
         {
-            await dbSet.AddAsync(entity);
+            await dbSet.AddAsync(entity);  
             await SeveAsync();
             WatchLogger.Log("Сущность создана.");
             return entity;

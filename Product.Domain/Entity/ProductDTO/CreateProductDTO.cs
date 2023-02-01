@@ -11,7 +11,8 @@
        
         [StringLength(1000, MinimumLength = 0, ErrorMessage = "Описание продукта не должно превышать 1000 символов.")]
         public string Description { get; set; } = string.Empty;
-        //public int CategoryId { get; set; }
+
+        public int CategoryId { get; set; }
         public CreateCategoryDTO? Category { get; set; }
 
         [StringLength(int.MaxValue, MinimumLength = 5, ErrorMessage = "Длина url адреса должна быть не менее 5 символов")]

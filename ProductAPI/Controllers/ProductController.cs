@@ -154,10 +154,16 @@ namespace ProductAPI.Controllers
             WatchLogger.Log($"выполнен вход. /ProductController/method: Create");
             WatchLogger.Log($"Создание нового продукта.");
             var product = (BaseResponse<ProductDTO>)await _productSer.CreateServiceAsync(productDTO);
-            if (product.Status is Status.ExistsUrl)
+            if (product.Status is Status.ExistsName)
             {
                 ModelState.AddModelError("", "Продукт с таким наименованием существует.");
                 WatchLogger.Log($"Ответ отправлен. Продукт с таким наименованием существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
+                return BadRequest(ModelState);
+            }
+            if (product.Status is Status.ExistsUrl)
+            {
+                ModelState.AddModelError("", "Продукт с таким url адрессом изображения существует.");
+                WatchLogger.Log($"Ответ отправлен. Продукт с таким url адрессом изображения существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
                 return BadRequest(ModelState);
             }
             if (product.Result is null)
