@@ -14,6 +14,8 @@
     {
         Ok,
         ExistsName,
-        ExistsUrl
+        ExistsUrl,
+        NotFound,
+        NotCreate
     }
 }

@@ -1,18 +1,7 @@
 ﻿namespace ProductAPI.Domain.Entity.ProductDTO
 {
-    public record struct UpdateProductDTO
+    public record UpdatePatrialProductDTO
     {
-        public UpdateProductDTO(int productId, string productName, double price, string description, UpdateCategoryDTO? category, string mainImageUrl, ICollection<UpdateImageDTO>? secondaryImages)
-        {
-            ProductId = productId;
-            ProductName = productName;
-            Price = price;
-            Description = description;
-            Category = category;
-            MainImageUrl = mainImageUrl;
-            SecondaryImages = secondaryImages;
-        }
-
         [Required(ErrorMessage = "Укажите id продукта.")]
         public int ProductId { get; set; }
         [Required(ErrorMessage = "Введите название продукта.")]

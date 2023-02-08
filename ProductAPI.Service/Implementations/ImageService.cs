@@ -38,6 +38,7 @@ namespace ProductAPI.Service.Implementations
             {
                 WatchLogger.Log("Изображение не сохранено.");
                 baseResponse.DisplayMessage = "Изображение не сохранено.";
+                baseResponse.Status = Status.NotCreate;
             }
             baseResponse.Result = _mapper.Map<ImageDTO>(image);
             return baseResponse;
@@ -80,6 +81,7 @@ namespace ProductAPI.Service.Implementations
             {
                 WatchLogger.Log($"Изображение под id [{id}] не найдено");
                 baseResponse.DisplayMessage = $"Изображение под id [{id}] не найдено";
+                baseResponse.Status = Status.NotFound;
             }
             else
             {
@@ -143,11 +145,15 @@ namespace ProductAPI.Service.Implementations
             if (carent is null)
             {
                 WatchLogger.Log("Попытка обновить объект, которого нет в хранилище.");
-                throw new NullReferenceException("Попытка обновить объект, которого нет в хранилище.");
+                baseResponse.Status = Status.NotFound;
+                baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
-            var image = await _imageRep.UpdateAsync(_mapper.Map<Image>(updateModel), carent); ;
-            baseResponse.DisplayMessage = "Изображение обновилось.";
-            baseResponse.Result = _mapper.Map<ImageDTO>(image);
+            else
+            {
+                var image = await _imageRep.UpdateAsync(_mapper.Map<Image>(updateModel), carent); ;
+                baseResponse.DisplayMessage = "Изображение обновилось.";
+                baseResponse.Result = _mapper.Map<ImageDTO>(image);
+            }
             WatchLogger.Log($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
             return baseResponse;
         }

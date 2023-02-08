@@ -38,6 +38,7 @@ namespace ProductAPI.Service.Implementations
             {
                 WatchLogger.Log("Категория не создана.");
                 baseResponse.DisplayMessage = "Категория не создана.";
+                baseResponse.Status = Status.NotCreate;
             }
             baseResponse.Result = _mapper.Map<CategoryDTO>(category);
             WatchLogger.Log($"Ответ отправлен контролеру/method: CreateServiceAsync");
@@ -81,6 +82,7 @@ namespace ProductAPI.Service.Implementations
             {
                 WatchLogger.Log($"Категория по id [{id}] не найдена");
                 baseResponse.DisplayMessage = $"Категория по id [{id}] не найдена";
+                baseResponse.Status = Status.NotFound;
             }
             else
             {
@@ -144,11 +146,15 @@ namespace ProductAPI.Service.Implementations
             if (carent is null)
             {
                 WatchLogger.Log("Попытка обновить объект, которого нет в хранилище.");
-                throw new NullReferenceException("Попытка обновить объект, которого нет в хранилище.");
+                baseResponse.Status = Status.NotFound;
+                baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
-            var category = await _categoryRep.UpdateAsync(_mapper.Map<Category>(updateModel), carent); ;
-            baseResponse.DisplayMessage = "Категория обновилась.";
-            baseResponse.Result = _mapper.Map<CategoryDTO>(category);
+            else
+            {
+                var category = await _categoryRep.UpdateAsync(_mapper.Map<Category>(updateModel), carent); ;
+                baseResponse.DisplayMessage = "Категория обновилась.";
+                baseResponse.Result = _mapper.Map<CategoryDTO>(category);
+            }
             WatchLogger.Log($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
             return baseResponse;
         }

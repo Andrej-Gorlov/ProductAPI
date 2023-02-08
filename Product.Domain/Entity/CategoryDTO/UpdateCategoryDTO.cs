@@ -1,7 +1,14 @@
 ﻿namespace ProductAPI.Domain.Entity.CategoryDTO
 {
-    public record UpdateCategoryDTO
+    public record struct UpdateCategoryDTO
     {
+        public UpdateCategoryDTO(int categoryId, string categoryName, string imageUrl)
+        {
+            CategoryId = categoryId;
+            CategoryName = categoryName;
+            ImageUrl = imageUrl;
+        }
+
         [Required(ErrorMessage = "Укажите id категории.")]
         public int CategoryId { get; set; }
         [Required(ErrorMessage = "Укажите название категории.")]

@@ -121,8 +121,8 @@ namespace ProductAPI.Controllers
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
             WatchLogger.Log($"Получение продукта по id: {id}.");
-            var product = await _productSer.GetByIdServiceAsync(id);
-            if (product.Result is null)
+            var product = (BaseResponse<ProductDTO>)await _productSer.GetByIdServiceAsync(id);
+            if (product.Status is Status.NotFound)
             {
                 WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: GetById");
                 return NotFound(product);
@@ -166,7 +166,7 @@ namespace ProductAPI.Controllers
                 WatchLogger.Log($"Ответ отправлен. Продукт с таким url адрессом изображения существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
                 return BadRequest(ModelState);
             }
-            if (product.Result is null)
+            if (product.Status is Status.NotCreate)
             {
                 WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Create");
                 return BadRequest(product);
@@ -198,8 +198,8 @@ namespace ProductAPI.Controllers
         {
             WatchLogger.Log($"выполнен вход. /ProductController/method: Update");
             WatchLogger.Log($"Обновление продукта.");
-            var product = await _productSer.UpdateServiceAsync(productDTO);
-            if (product.Result is null)
+            var product = (BaseResponse<ProductDTO>)await _productSer.UpdateServiceAsync(productDTO);
+            if (product.Status is Status.NotFound)
             {
                 WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Update");
                 return NotFound(product);
@@ -229,7 +229,7 @@ namespace ProductAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdatePatrial(int id, JsonPatchDocument<UpdateProductDTO> productDto)
+        public async Task<IActionResult> UpdatePatrial(int id, JsonPatchDocument<UpdatePatrialProductDTO> productDto)
         {
             WatchLogger.Log($"выполнен вход. /ProductController/method: UpdatePatrial");
             if (productDto.Operations.FirstOrDefault(x => x.op == "replace") != null)
@@ -242,8 +242,8 @@ namespace ProductAPI.Controllers
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
             WatchLogger.Log($"Частичное обновление продукта.");
-            var product = await _productSer.UpdatePatrialServiceAsync(id, productDto);
-            if (product.Result is null)
+            var product = (BaseResponse<ProductDTO>)await _productSer.UpdatePatrialServiceAsync(id, productDto);
+            if (product.Status is Status.NotFound)
             {
                 WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: UpdatePatrial");
                 return NotFound(product);

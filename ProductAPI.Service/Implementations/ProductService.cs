@@ -47,6 +47,7 @@ namespace ProductAPI.Service.Implementations
             {
                 WatchLogger.Log("Продукт не создан.");
                 baseResponse.DisplayMessage = "Продукт не создан.";
+                baseResponse.Status = Status.NotCreate;
             }
             baseResponse.Result = _mapper.Map<ProductDTO>(product);
             WatchLogger.Log($"Ответ отправлен контролеру/method: CreateServiceAsync");
@@ -90,6 +91,7 @@ namespace ProductAPI.Service.Implementations
             {
                 WatchLogger.Log($"Продукт по id [{id}] не найден.");
                 baseResponse.DisplayMessage = $"Продукт по id [{id}] не найден.";
+                baseResponse.Status = Status.NotFound;
             }
             else
             {
@@ -151,21 +153,25 @@ namespace ProductAPI.Service.Implementations
         /// <param name="updateModel"></param>
         /// <returns>Базовый ответ.</returns>
         /// <exception cref="NullReferenceException"></exception>
-        public async Task<IBaseResponse<ProductDTO>> UpdatePatrialServiceAsync(int id, JsonPatchDocument<UpdateProductDTO> updateModel)
+        public async Task<IBaseResponse<ProductDTO>> UpdatePatrialServiceAsync(int id, JsonPatchDocument<UpdatePatrialProductDTO> updateModel)
         {
             WatchLogger.Log($"Частичное обновление. /method: UpdatePatrialServiceAsync");
             var carent = await _productRep.GetByAsync(x => x.ProductId == id, false);
             if (carent is null)
             {
                 WatchLogger.Log($"Попытка обновить объект, которого нет в хранилище.");
-                throw new NullReferenceException("Попытка обновить объект, которого нет в хранилище.");
+                baseResponse.Status = Status.NotFound;
+                baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
-            var entity = _mapper.Map<UpdateProductDTO>(carent);
-            updateModel.ApplyTo(entity);
-            Product entityProduct = await _productRep.UpdateAsync(_mapper.Map<Product>(entity), carent);
-            WatchLogger.Log("Продукт отредактирован.");
-            baseResponse.DisplayMessage = "Продукт отредактирован.";
-            baseResponse.Result = _mapper.Map<ProductDTO>(entityProduct);
+            else
+            {
+                var entity = _mapper.Map<UpdatePatrialProductDTO>(carent);
+                updateModel.ApplyTo(entity);
+                Product entityProduct = await _productRep.UpdateAsync(_mapper.Map<Product>(entity), carent);
+                WatchLogger.Log("Продукт отредактирован.");
+                baseResponse.DisplayMessage = "Продукт отредактирован.";
+                baseResponse.Result = _mapper.Map<ProductDTO>(entityProduct);
+            }
             WatchLogger.Log($"Ответ отправлен контролеру/ method: UpdatePatrialServiceAsync");
             return baseResponse;
         }
@@ -182,11 +188,15 @@ namespace ProductAPI.Service.Implementations
             if (carent is null)
             {
                 WatchLogger.Log("Попытка обновить объект, которого нет в хранилище.");
-                throw new NullReferenceException("Попытка обновить объект, которого нет в хранилище.");
+                baseResponse.Status = Status.NotFound;
+                baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
-            var product = await _productRep.UpdateAsync(_mapper.Map<Product>(updateModel), carent);
-            baseResponse.DisplayMessage = "Продукт обновился.";
-            baseResponse.Result = _mapper.Map<ProductDTO>(product);
+            else
+            {
+                var product = await _productRep.UpdateAsync(_mapper.Map<Product>(updateModel), carent);
+                baseResponse.DisplayMessage = "Продукт обновился.";
+                baseResponse.Result = _mapper.Map<ProductDTO>(product);
+            }
             WatchLogger.Log($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
             return baseResponse;
         }

@@ -101,8 +101,8 @@
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
             WatchLogger.Log($"Получение категории по id: {id}.");
-            var category = await _categorySer.GetByIdServiceAsync(id);
-            if (category.Result is null)
+            var category = (BaseResponse<CategoryDTO>)await _categorySer.GetByIdServiceAsync(id);
+            if (category.Status is Status.NotFound)
             {
                 WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /CategoryController/method: GetById");
                 return NotFound(category);
@@ -140,7 +140,7 @@
                 WatchLogger.Log($"Ответ отправлен. Категория с таким названием уже существует. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Create");
                 return BadRequest(ModelState);
             }
-            if (category.Result is null)
+            if (category.Status is Status.NotCreate)
             {
                 WatchLogger.Log($"Ответ отправлен. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Create");
                 return BadRequest(category);
@@ -172,8 +172,8 @@
         {
             WatchLogger.Log($"выполнен вход. /CategoryController/method: Update");
             WatchLogger.Log($"Обновление категории");
-            var category = await _categorySer.UpdateServiceAsync(categoryDTO);
-            if (category.Result is null)
+            var category = (BaseResponse<CategoryDTO>)await _categorySer.UpdateServiceAsync(categoryDTO);
+            if (category.Status is Status.NotFound)
             {
                 WatchLogger.Log($"Ответ отправлен. Cтатус: {NotFound().StatusCode} /CategoryController/method: Update");
                 return NotFound(category);

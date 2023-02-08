@@ -1,7 +1,19 @@
 ﻿namespace ProductAPI.Domain.Entity.ProductDTO
 {
-    public record ProductDTO
+    public record struct ProductDTO
     {
+        public ProductDTO(int productId, string? productName, double price, DateTime createDateTime, string description, CategoryDTO.CategoryDTO? category, string mainImageUrl, ICollection<ImageDTO.ImageDTO>? secondaryImages)
+        {
+            ProductId = productId;
+            ProductName = productName;
+            Price = price;
+            CreateDateTime = createDateTime;
+            Description = description;
+            Category = category;
+            MainImageUrl = mainImageUrl;
+            SecondaryImages = secondaryImages;
+        }
+
         public int ProductId { get; set; }
         public string? ProductName { get; set; } = string.Empty;
         public double Price { get; set; }

@@ -1,7 +1,18 @@
 ﻿namespace ProductAPI.Domain.Entity.ProductDTO
 {
-    public record CreateProductDTO
+    public record struct CreateProductDTO
     {
+        public CreateProductDTO(string productName, double price, string description, int categoryId, CreateCategoryDTO? category, string mainImageUrl, ICollection<CreateImageDTO>? secondaryImages)
+        {
+            ProductName = productName;
+            Price = price;
+            Description = description;
+            CategoryId = categoryId;
+            Category = category;
+            MainImageUrl = mainImageUrl;
+            SecondaryImages = secondaryImages;
+        }
+
         [Required(ErrorMessage = "Введите название продукта.")]
         [StringLength(150, MinimumLength = 2, ErrorMessage = "Название продукта должен содержать быть не менее 2 и не более 150 символов")]
         public string ProductName { get; set; } = string.Empty;

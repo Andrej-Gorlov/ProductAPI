@@ -2,8 +2,15 @@
 
 namespace ProductAPI.Domain.Entity.CategoryDTO
 {
-    public record CreateCategoryDTO
+    public record struct CreateCategoryDTO
     {
+        public CreateCategoryDTO(int categoryId, string categoryName, string imageUrl)
+        {
+            CategoryId = categoryId;
+            CategoryName = categoryName;
+            ImageUrl = imageUrl;
+        }
+
         public int CategoryId { get; set; } 
         [Required(ErrorMessage = "Укажите название категории.")]
         [StringLength(50, MinimumLength = 2, ErrorMessage = "Длина названия категории должна быть не менее 2 и не более 50 символов")]

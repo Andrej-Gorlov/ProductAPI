@@ -100,8 +100,8 @@
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
             WatchLogger.Log($"Получение изображения по id: {id}.");
-            var image = await _imageSer.GetByIdServiceAsync(id);
-            if (image.Result is null)
+            var image = (BaseResponse<ImageDTO>)await _imageSer.GetByIdServiceAsync(id);
+            if (image.Status is Status.NotFound)
             {
                 WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: GetById");
                 return NotFound(image);
@@ -139,7 +139,7 @@
                 WatchLogger.Log($"Ответ отправлен. Изображение с таким url существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
                 return BadRequest(ModelState);
             }
-            if (image.Result is null)
+            if (image.Status is Status.NotCreate)
             {
                 WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Create");
                 return BadRequest(image);
@@ -171,8 +171,8 @@
         {
             WatchLogger.Log($"выполнен вход. /ImageController/method: Update");
             WatchLogger.Log($"Обновление изображения.");
-            var image = await _imageSer.UpdateServiceAsync(imageDTO);
-            if (image.Result is null)
+            var image = (BaseResponse<ImageDTO>)await _imageSer.UpdateServiceAsync(imageDTO);
+            if (image.Status is Status.NotFound)
             {
                 WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Update");
                 return NotFound(image);
