@@ -1,6 +1,6 @@
 ﻿namespace ProductAPI.Domain.Entity.ProductDTO
 {
-    public class UpdateProductDTO
+    public record UpdateProductDTO
     {
         [Required(ErrorMessage = "Укажите id продукта.")]
         public int ProductId { get; set; }

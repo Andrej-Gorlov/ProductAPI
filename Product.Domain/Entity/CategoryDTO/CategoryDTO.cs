@@ -1,6 +1,6 @@
 ﻿namespace ProductAPI.Domain.Entity.CategoryDTO
 {
-    public class CategoryDTO
+    public record CategoryDTO
     {
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;

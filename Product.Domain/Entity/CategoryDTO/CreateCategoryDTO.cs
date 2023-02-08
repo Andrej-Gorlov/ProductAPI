@@ -2,7 +2,7 @@
 
 namespace ProductAPI.Domain.Entity.CategoryDTO
 {
-    public class CreateCategoryDTO
+    public record CreateCategoryDTO
     {
         public int CategoryId { get; set; } 
         [Required(ErrorMessage = "Укажите название категории.")]

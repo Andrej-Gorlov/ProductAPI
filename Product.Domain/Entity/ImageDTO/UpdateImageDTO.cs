@@ -1,6 +1,6 @@
 ﻿namespace ProductAPI.Domain.Entity.ImageDTO
 {
-    public class UpdateImageDTO
+    public record UpdateImageDTO
     {
         [Required(ErrorMessage = "Укажите id изображения.")]
         public int ImageId { get; set; }

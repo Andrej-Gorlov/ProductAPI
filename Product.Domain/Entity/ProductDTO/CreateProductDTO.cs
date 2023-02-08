@@ -1,6 +1,6 @@
 ﻿namespace ProductAPI.Domain.Entity.ProductDTO
 {
-    public class CreateProductDTO
+    public record CreateProductDTO
     {
         [Required(ErrorMessage = "Введите название продукта.")]
         [StringLength(150, MinimumLength = 2, ErrorMessage = "Название продукта должен содержать быть не менее 2 и не более 150 символов")]

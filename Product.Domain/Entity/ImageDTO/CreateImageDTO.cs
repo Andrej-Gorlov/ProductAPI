@@ -1,7 +1,6 @@
-﻿
-namespace ProductAPI.Domain.Entity.ImageDTO
+﻿namespace ProductAPI.Domain.Entity.ImageDTO
 {
-    public class CreateImageDTO
+    public record CreateImageDTO
     {
         public int ProductId { get; set; }
         [StringLength(int.MaxValue, MinimumLength = 5, ErrorMessage = "Длина url адреса должна быть не менее 5 символов")]

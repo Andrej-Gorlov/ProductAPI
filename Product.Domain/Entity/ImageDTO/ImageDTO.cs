@@ -1,6 +1,6 @@
 ﻿namespace ProductAPI.Domain.Entity.ImageDTO
 {
-    public class ImageDTO
+    public record ImageDTO
     {
         public int ImageId { get; set; }
         public int ProductId { get; set; }

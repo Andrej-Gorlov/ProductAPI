@@ -1,6 +1,6 @@
 ﻿namespace ProductAPI.Domain.Entity.CategoryDTO
 {
-    public class UpdateCategoryDTO
+    public record UpdateCategoryDTO
     {
         [Required(ErrorMessage = "Укажите id категории.")]
         public int CategoryId { get; set; }
