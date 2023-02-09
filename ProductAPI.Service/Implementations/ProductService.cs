@@ -1,4 +1,5 @@
 ﻿using ProductAPI.Service.Helpers;
+using Ubiety.Dns.Core;
 
 namespace ProductAPI.Service.Implementations
 {
@@ -142,6 +143,7 @@ namespace ProductAPI.Service.Implementations
                 WatchLogger.Log("применение пагинации. /method: GetServiceAsync");
                 baseResponse.Result = PagedList<ProductDTO>.ToPagedList(
                     listProducts, paging.PageNumber, paging.PageSize);
+                baseResponse.ParameterPaged = baseResponse.Result.Parameter;
             }
             WatchLogger.Log($"Ответ отправлен контролеру/ method: GetServiceAsync");
             return baseResponse;

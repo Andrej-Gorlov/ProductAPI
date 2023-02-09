@@ -72,18 +72,6 @@ namespace ProductAPI.Controllers
                 WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Get");
                 return NotFound(products);
             }
-            WatchLogger.Log($"Получение метаданных пагинации.");
-            var metadata = new
-            {
-                products.Result.TotalCount,
-                products.Result.PageSize,
-                products.Result.CurrentPage,
-                products.Result.TotalPages,
-                products.Result.HasNext,
-                products.Result.HasPrevious
-            };
-            WatchLogger.Log($"Добавление метаданных в заголовок запроса.");
-            Response?.Headers?.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
             WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: Get");
             return Ok(products);
         }
@@ -156,15 +144,13 @@ namespace ProductAPI.Controllers
             var product = (BaseResponse<ProductDTO>)await _productSer.CreateServiceAsync(productDTO);
             if (product.Status is Status.ExistsName)
             {
-                ModelState.AddModelError("", "Продукт с таким наименованием существует.");
                 WatchLogger.Log($"Ответ отправлен. Продукт с таким наименованием существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
-                return BadRequest(ModelState);
+                return BadRequest(product);
             }
             if (product.Status is Status.ExistsUrl)
             {
-                ModelState.AddModelError("", "Продукт с таким url адрессом изображения существует.");
                 WatchLogger.Log($"Ответ отправлен. Продукт с таким url адрессом изображения существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
-                return BadRequest(ModelState);
+                return BadRequest(product);
             }
             if (product.Status is Status.NotCreate)
             {

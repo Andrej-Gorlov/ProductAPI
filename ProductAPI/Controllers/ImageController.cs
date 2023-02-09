@@ -135,9 +135,8 @@
             var image = (BaseResponse<ImageDTO>)await _imageSer.CreateServiceAsync(imageDTO);
             if (image.Status is Status.ExistsUrl)
             {
-                ModelState.AddModelError("", "Изображение с таким url существует.");
                 WatchLogger.Log($"Ответ отправлен. Изображение с таким url существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
-                return BadRequest(ModelState);
+                return BadRequest(image);
             }
             if (image.Status is Status.NotCreate)
             {

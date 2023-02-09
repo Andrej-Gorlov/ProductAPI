@@ -136,9 +136,8 @@
             var category = (BaseResponse<CategoryDTO>)await _categorySer.CreateServiceAsync(categoryDTO);
             if (category.Status is Status.ExistsName)
             {
-                ModelState.AddModelError("", "Категория с таким названием уже существует");
                 WatchLogger.Log($"Ответ отправлен. Категория с таким названием уже существует. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Create");
-                return BadRequest(ModelState);
+                return BadRequest(category);
             }
             if (category.Status is Status.NotCreate)
             {

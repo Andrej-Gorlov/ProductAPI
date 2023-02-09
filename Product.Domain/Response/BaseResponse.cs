@@ -1,10 +1,13 @@
-﻿namespace ProductAPI.Domain.Response
+﻿using ProductAPI.Domain.Paging;
+
+namespace ProductAPI.Domain.Response
 {
     public class BaseResponse<T> : IBaseResponse<T>
     {
         public T? Result { get; set; }
         public string DisplayMessage { get; set; } = "";
         public Status Status { get; set; }
+        public ParameterPagedList? ParameterPaged { get; set; }   
     }
     public interface IBaseResponse<T>
     {
