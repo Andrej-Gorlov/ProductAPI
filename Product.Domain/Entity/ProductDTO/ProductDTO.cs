@@ -14,14 +14,14 @@
             SecondaryImages = secondaryImages;
         }
 
-        public int ProductId { get; set; }
-        public string? ProductName { get; set; } = string.Empty;
-        public double Price { get; set; }
-        public DateTime CreateDateTime { get; } = DateTime.Now;
-        public string Description { get; set; } = string.Empty;
-        //public int CategoryId { get; set; }
-        public CategoryDTO.CategoryDTO? Category { get; set; }
-        public string MainImageUrl { get; set; } = string.Empty;
-        public ICollection<ImageDTO.ImageDTO>? SecondaryImages { get; set; }
+        public int ProductId { get; init; }
+        public string? ProductName { get; init; } = string.Empty;
+        public double Price { get; init; }
+        public DateTime CreateDateTime { get; init; } = DateTime.Now;
+        public string Description { get; init; } = string.Empty;
+        //public int CategoryId { get; init; }
+        public CategoryDTO.CategoryDTO? Category { get; init; }
+        public string MainImageUrl { get; init; } = string.Empty;
+        public ICollection<ImageDTO.ImageDTO>? SecondaryImages { get; init; }
     }
 }

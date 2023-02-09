@@ -9,8 +9,8 @@
             ImageUrl = imageUrl;
         }
 
-        public int ImageId { get; set; }
-        public int ProductId { get; set; }
-        public string ImageUrl { get; set; } = string.Empty;
+        public int ImageId { get; init; }
+        public int ProductId { get; init; }
+        public string ImageUrl { get; init; } = string.Empty;
     }
 }
