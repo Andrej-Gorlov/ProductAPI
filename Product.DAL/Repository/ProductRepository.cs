@@ -5,14 +5,19 @@ namespace ProductAPI.DAL.Repository
     public class ProductRepository : BaseRepository<Product>, IProductRepository
     {
         private readonly ApplicationDbContext _db;
-        public ProductRepository(ApplicationDbContext db) : base(db) => _db = db;
+        private readonly ILogger<ProductRepository> _logger;
+        public ProductRepository(ApplicationDbContext db, ILogger<ProductRepository> logger) : base(db, logger)
+        {
+            _db = db;
+            _logger = logger;
+        } 
 
         public async Task<IEnumerable<Product>> GetAsync(Expression<Func<Product, bool>>? filter = null, string? search = null, string[]? includeProperties = null)
         {
             IQueryable<Product> products = _db.Products;
             if (includeProperties != null)
             {
-                WatchLogger.Log($"включено свойство: {includeProperties}.");
+                _logger.LogInformation($"включено свойство: {includeProperties}.");
                 foreach (var item in includeProperties)
                 {
                     products = products.Include(item);
@@ -20,22 +25,22 @@ namespace ProductAPI.DAL.Repository
             }
             if (filter != null)
             {
-                WatchLogger.Log($"Применен фильтр: {filter.Body},Type: {filter.Type}.");
+                _logger.LogInformation($"Применен фильтр: {filter.Body},Type: {filter.Type}.");
                 products = products.Where(filter);
             }
             if (search != null && includeProperties is null)
             {
-                WatchLogger.Log($"Применен поиск: {search}.");
+                _logger.LogInformation($"Применен поиск: {search}.");
                 products = products.Where(x => EF.Functions.Like(x.ProductName, $"%{search}%"));
             }
             if (search != null && includeProperties?.FirstOrDefault(x => x== nameof(ProductDTO.Category)) != null)
             {
-                WatchLogger.Log($"Применен поиск: {search}.");
+                _logger.LogInformation($"Применен поиск: {search}.");
                 products = products.Where(
                     x => EF.Functions.Like(x.ProductName, $"%{search}%")
                     || EF.Functions.Like(x.Category.CategoryName, $"%{search}%"));
             }
-            WatchLogger.Log("Возвращение списка продуктов.");
+            _logger.LogInformation("Возвращение списка продуктов.");
             return await products.ToListAsync();
         }
 
@@ -44,17 +49,11 @@ namespace ProductAPI.DAL.Repository
             IQueryable<Product> products = _db.Products;
             if (!tracking)
             {
-                WatchLogger.Log($"Применен AsNoTracking. Данные не помещены в кэш");
+                _logger.LogInformation($"Применен AsNoTracking. Данные не помещены в кэш");
                 products = products.AsNoTracking();
             }
-            WatchLogger.Log($"Возвращен отфильтрованный список. Filter: {filter.Body},Type: {filter.Type}.");
+            _logger.LogInformation($"Возвращен отфильтрованный список. Filter: {filter.Body},Type: {filter.Type}.");
             return await products.Include(x=>x.Category). FirstOrDefaultAsync(filter);
-        }
-
-        public async Task<Product> DescendingIdAsync()
-        {
-            IQueryable<Product> product = _db.Products.OrderByDescending(x => x.ProductId);
-            return await product.FirstOrDefaultAsync();
         }
     }
 }

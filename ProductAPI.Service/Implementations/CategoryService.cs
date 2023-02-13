@@ -1,4 +1,5 @@
-﻿using ProductAPI.Service.Helpers;
+﻿using Microsoft.Extensions.Logging;
+using ProductAPI.Service.Helpers;
 
 namespace ProductAPI.Service.Implementations
 {
@@ -7,11 +8,13 @@ namespace ProductAPI.Service.Implementations
         private ICategoryRepository _categoryRep;
         private IMapper _mapper;
         private BaseResponse<CategoryDTO> baseResponse;
+        private readonly ILogger<CategoryService> _logger;
         private string message = "";
-        public CategoryService(ICategoryRepository categoryRep, IMapper mapper)
+        public CategoryService(ICategoryRepository categoryRep, IMapper mapper, ILogger<CategoryService> logger)
         {
             _categoryRep = categoryRep;
             _mapper = mapper;
+            _logger = logger;
             baseResponse = new();
         }
         /// <summary>
@@ -21,10 +24,10 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<CategoryDTO>> CreateServiceAsync(CreateCategoryDTO createModel)
         {
-            WatchLogger.Log($"Создание категории. / method: CreateServiceAsync");
+            _logger.LogInformation($"Создание категории. / method: CreateServiceAsync");
             if (await _categoryRep.GetByAsync(x => x.CategoryName == createModel.CategoryName) != null)
             {
-                WatchLogger.Log("Категория с таким наименованием существует.");
+                _logger.LogWarning("Категория с таким наименованием существует.");
                 baseResponse.DisplayMessage = "Категория с таким наименованием существует.";
                 baseResponse.Status = Status.ExistsName;
                 return baseResponse;
@@ -32,16 +35,16 @@ namespace ProductAPI.Service.Implementations
             var category = await _categoryRep.CreateAsync(_mapper.Map<Category>(createModel));
             if (category != null)
             {
-                WatchLogger.Log("Категория создана.");
+                _logger.LogInformation("Категория создана.");
             }
             else
             {
-                WatchLogger.Log("Категория не создана.");
+                _logger.LogInformation("Категория не создана.");
                 baseResponse.DisplayMessage = "Категория не создана.";
                 baseResponse.Status = Status.NotCreate;
             }
             baseResponse.Result = _mapper.Map<CategoryDTO>(category);
-            WatchLogger.Log($"Ответ отправлен контролеру/method: CreateServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/method: CreateServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -51,22 +54,22 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<bool>> DeleteServiceAsync(int id)
         {
-            WatchLogger.Log($"Удаление категории. / method: DeleteServiceAsync");
+            _logger.LogInformation($"Удаление категории. / method: DeleteServiceAsync");
             var baseResponse = new BaseResponse<bool>();
-            WatchLogger.Log($"Поиск категории по id: {id}. / method: DeleteServiceAsync");
+            _logger.LogInformation($"Поиск категории по id: {id}. / method: DeleteServiceAsync");
             Category category = await _categoryRep.GetByAsync(x => x.CategoryId == id, true);
             if (category is null)
             {
-                WatchLogger.Log($"Категория c id: {id} не найдена.");
+                _logger.LogWarning($"Категория c id: {id} не найдена.");
                 baseResponse.DisplayMessage = $"Категория c id: {id} не найдена.";
                 baseResponse.Result = false;
-                WatchLogger.Log($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
+                _logger.LogInformation($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
                 return baseResponse;
             }
             await _categoryRep.DeleteAsync(category);
             baseResponse.DisplayMessage = "Категория удалена.";
             baseResponse.Result = true;
-            WatchLogger.Log($"Ответ отправлен контролеру (true)/ method: DeleteServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру (true)/ method: DeleteServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -76,20 +79,20 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<CategoryDTO>> GetByIdServiceAsync(int id)
         {
-            WatchLogger.Log($"Поиск категории по id: {id}. / method: GetByIdServiceAsync");
+            _logger.LogInformation($"Поиск категории по id: {id}. / method: GetByIdServiceAsync");
             Category category = await _categoryRep.GetByAsync(x => x.CategoryId == id);
             if (category is null)
             {
-                WatchLogger.Log($"Категория по id [{id}] не найдена");
+                _logger.LogWarning($"Категория по id [{id}] не найдена");
                 baseResponse.DisplayMessage = $"Категория по id [{id}] не найдена";
                 baseResponse.Status = Status.NotFound;
             }
             else
             {
-                WatchLogger.Log($"Вывод категории по id [{id}]");
+                _logger.LogInformation($"Вывод категории по id [{id}]");
             }
             baseResponse.Result = _mapper.Map<CategoryDTO>(category);
-            WatchLogger.Log($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -100,7 +103,7 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<List<CategoryDTO>>> GetServiceAsync(string? filter = null, string? search = null)
         {
-            WatchLogger.Log($"Список категорий. / method: GetServiceAsync");
+            _logger.LogInformation($"Список категорий. / method: GetServiceAsync");
             var bResponse = new BaseResponse <List<CategoryDTO>>();
             IEnumerable<Category>? categorys = null;
             if (!string.IsNullOrEmpty(filter) && !string.IsNullOrEmpty(search))
@@ -121,16 +124,16 @@ namespace ProductAPI.Service.Implementations
             }
             if (categorys is null)
             {
-                WatchLogger.Log("Список категорий пуст.");
+                _logger.LogInformation("Список категорий пуст.");
                 baseResponse.DisplayMessage = "Список категорий пуст.";
             }
             else
             {
-                WatchLogger.Log("Список категорий.");
+                _logger.LogInformation("Список категорий.");
                 IEnumerable<CategoryDTO> listCategorys = _mapper.Map<IEnumerable<CategoryDTO>>(categorys);
                 bResponse.Result = listCategorys.ToList();
             }
-            WatchLogger.Log($"Ответ отправлен контролеру/ method: GetServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/ method: GetServiceAsync");
             return bResponse;
         }
         /// <summary>
@@ -141,11 +144,11 @@ namespace ProductAPI.Service.Implementations
         /// <exception cref="NullReferenceException"></exception>
         public async Task<IBaseResponse<CategoryDTO>> UpdateServiceAsync(UpdateCategoryDTO updateModel)
         {
-            WatchLogger.Log($"Обновление категории.");
+            _logger.LogInformation($"Обновление категории.");
             var carent = await _categoryRep.GetByAsync(x => x.CategoryId == updateModel.CategoryId, false);
             if (carent is null)
             {
-                WatchLogger.Log("Попытка обновить объект, которого нет в хранилище.");
+                _logger.LogWarning("Попытка обновить объект, которого нет в хранилище.");
                 baseResponse.Status = Status.NotFound;
                 baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
@@ -155,7 +158,7 @@ namespace ProductAPI.Service.Implementations
                 baseResponse.DisplayMessage = "Категория обновилась.";
                 baseResponse.Result = _mapper.Map<CategoryDTO>(category);
             }
-            WatchLogger.Log($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -166,7 +169,7 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Отфильтрованный список и сообщение</returns>
         private async Task<(IEnumerable<Category>?, string)> FilterAndSearchAsync(IEnumerable<Category>? categorys, string filter, string? search = null)
         {
-            WatchLogger.Log($"Поиск категории по фильтру: {filter}. / method: FilterAsync");
+            _logger.LogInformation($"Поиск категории по фильтру: {filter}. / method: FilterAsync");
             Uri? uri;
             if (Uri.TryCreate(filter, UriKind.Absolute, out uri) 
                 && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
@@ -174,19 +177,19 @@ namespace ProductAPI.Service.Implementations
                 categorys = await _categoryRep.GetAsync(x => x.ImageUrl == uri.ToString(), search);
 
                 if (categorys is null)
-                    message = Message.FilterAndSearch(true, "категорий", filter, search);
+                    message = Message.FilterAndSearch(_logger, true, "категорий", filter, search);
                 else
-                    message = Message.FilterAndSearch(false, "категорий", filter, search);
+                    message = Message.FilterAndSearch(_logger, false, "категорий", filter, search);
             }
             else
             {
                 categorys = await _categoryRep.GetAsync(x => x.CategoryName == filter, search);
                 if (categorys is null)
-                    message = Message.FilterAndSearch(true, "категорий", filter, search);
+                    message = Message.FilterAndSearch(_logger, true, "категорий", filter, search);
                 else
-                    message = Message.FilterAndSearch(false, "категорий", filter, search);
+                    message = Message.FilterAndSearch(_logger, false, "категорий", filter, search);
             }
-            WatchLogger.Log($"Ответ отправлен GetServiceAsync/ method: FilterAsync");
+            _logger.LogInformation($"Ответ отправлен GetServiceAsync/ method: FilterAsync");
             return (categorys, message);
         }
 

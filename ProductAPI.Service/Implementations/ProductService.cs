@@ -1,4 +1,5 @@
-﻿using ProductAPI.Service.Helpers;
+﻿using Microsoft.Extensions.Logging;
+using ProductAPI.Service.Helpers;
 using Ubiety.Dns.Core;
 
 namespace ProductAPI.Service.Implementations
@@ -9,12 +10,14 @@ namespace ProductAPI.Service.Implementations
         private ICategoryRepository _categoryRep;
         private IMapper _mapper;
         private BaseResponse<ProductDTO> baseResponse;
+        private ILogger<ProductService> _logger;
         private string message = "";
-        public ProductService(IProductRepository productRep, ICategoryRepository categoryRep, IMapper mapper)
+        public ProductService(IProductRepository productRep, ICategoryRepository categoryRep, IMapper mapper, ILogger<ProductService> logger)
         {
             _productRep = productRep;
             _categoryRep = categoryRep;
             _mapper = mapper;
+            _logger = logger;
             baseResponse = new();
         }
         /// <summary>
@@ -24,17 +27,17 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<ProductDTO>> CreateServiceAsync(CreateProductDTO createModel)
         {
-            WatchLogger.Log($"Создание продукта. / method: CreateServiceAsync");
+            _logger.LogInformation($"Создание продукта. / method: CreateServiceAsync");
             if (await _productRep.GetByAsync(x => x.ProductName == createModel.ProductName) != null)
             {
-                WatchLogger.Log("Продукт с таким наименованием существует.");
+                _logger.LogWarning("Продукт с таким наименованием существует.");
                 baseResponse.DisplayMessage = "Продукт с таким наименованием существует.";
                 baseResponse.Status = Status.ExistsName;
                 return baseResponse;
             }
             if (await _productRep.GetByAsync(x => x.MainImageUrl == createModel.MainImageUrl) != null)
             {
-                WatchLogger.Log("Продукт с таким url адрессом изображения существует.");
+                _logger.LogWarning("Продукт с таким url адрессом изображения существует.");
                 baseResponse.DisplayMessage = "Продукт с таким url адрессом изображения существует.";
                 baseResponse.Status = Status.ExistsUrl;
                 return baseResponse;
@@ -42,16 +45,16 @@ namespace ProductAPI.Service.Implementations
             var product = await _productRep.CreateAsync(_mapper.Map<Product>(createModel));
             if (product != null)
             {
-                WatchLogger.Log("Продукт создан.");
+                _logger.LogInformation("Продукт создан.");
             }
             else
             {
-                WatchLogger.Log("Продукт не создан.");
+                _logger.LogWarning("Продукт не создан.");
                 baseResponse.DisplayMessage = "Продукт не создан.";
                 baseResponse.Status = Status.NotCreate;
             }
             baseResponse.Result = _mapper.Map<ProductDTO>(product);
-            WatchLogger.Log($"Ответ отправлен контролеру/method: CreateServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/method: CreateServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -61,22 +64,22 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<bool>> DeleteServiceAsync(int id)
         {
-            WatchLogger.Log($"Удаление продукта. / method: DeleteServiceAsync");
+            _logger.LogInformation($"Удаление продукта. / method: DeleteServiceAsync");
             var baseResponse = new BaseResponse<bool>();
-            WatchLogger.Log($"Поиск продукта по id: {id}. / method: DeleteServiceAsync");
+            _logger.LogInformation($"Поиск продукта по id: {id}. / method: DeleteServiceAsync");
             Product product = await _productRep.GetByAsync(x => x.ProductId == id, true);
             if (product is null)
             {
-                WatchLogger.Log($"Продукт c id: {id} не найден.");
+                _logger.LogWarning($"Продукт c id: {id} не найден.");
                 baseResponse.DisplayMessage = $"Продукт c id: {id} не найден.";
                 baseResponse.Result = false;
-                WatchLogger.Log($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
+                _logger.LogInformation($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
                 return baseResponse;
             }
             await _productRep.DeleteAsync(product);
             baseResponse.DisplayMessage = "Продукт удален.";
             baseResponse.Result = true;
-            WatchLogger.Log($"Ответ отправлен контролеру (true)/ method: DeleteServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру (true)/ method: DeleteServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -86,20 +89,20 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<ProductDTO>> GetByIdServiceAsync(int id)
         {
-            WatchLogger.Log($"Поиск продукта по id: {id}. / method: GetByIdServiceAsync");
+            _logger.LogInformation($"Поиск продукта по id: {id}. / method: GetByIdServiceAsync");
             Product product = await _productRep.GetByAsync(x => x.ProductId == id);
             if (product is null)
             {
-                WatchLogger.Log($"Продукт по id [{id}] не найден.");
+                _logger.LogWarning($"Продукт по id [{id}] не найден.");
                 baseResponse.DisplayMessage = $"Продукт по id [{id}] не найден.";
                 baseResponse.Status = Status.NotFound;
             }
             else
             {
-                WatchLogger.Log($"Вывод продукта по id [{id}]");
+                _logger.LogInformation($"Вывод продукта по id [{id}]");
             }
             baseResponse.Result = _mapper.Map<ProductDTO>(product);
-            WatchLogger.Log($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -111,7 +114,7 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<PagedList<ProductDTO>>> GetServiceAsync(PagingQueryParameters paging, string? filter = null, string? search = null)
         {
-            WatchLogger.Log($"Список продуктов. /method: GetServiceAsync");
+            _logger.LogInformation($"Список продуктов. /method: GetServiceAsync");
             var baseResponse = new BaseResponse<PagedList<ProductDTO>>();
             string[] includeProperties = { nameof(ProductDTO.Category), nameof(ProductDTO.SecondaryImages)};
             IEnumerable<Product>? products = null;
@@ -133,19 +136,18 @@ namespace ProductAPI.Service.Implementations
             }
             if (products is null)
             {
-                WatchLogger.Log("Список продуктов пуст.");
+                _logger.LogWarning("Список продуктов пуст.");
                 baseResponse.DisplayMessage = "Список продуктов пуст.";
             }
             else
             {
-                WatchLogger.Log("Список продуктов.");
+                _logger.LogInformation("Список продуктов.");
                 IEnumerable<ProductDTO> listProducts = _mapper.Map<IEnumerable<ProductDTO>>(products);
-                WatchLogger.Log("применение пагинации. /method: GetServiceAsync");
-                baseResponse.Result = PagedList<ProductDTO>.ToPagedList(
-                    listProducts, paging.PageNumber, paging.PageSize);
+                _logger.LogInformation("применение пагинации. /method: GetServiceAsync");
+                baseResponse.Result = PagedList<ProductDTO>.ToPagedList(listProducts, paging.PageNumber, paging.PageSize);
                 baseResponse.ParameterPaged = baseResponse.Result.Parameter;
             }
-            WatchLogger.Log($"Ответ отправлен контролеру/ method: GetServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/ method: GetServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -157,11 +159,11 @@ namespace ProductAPI.Service.Implementations
         /// <exception cref="NullReferenceException"></exception>
         public async Task<IBaseResponse<ProductDTO>> UpdatePatrialServiceAsync(int id, JsonPatchDocument<UpdatePatrialProductDTO> updateModel)
         {
-            WatchLogger.Log($"Частичное обновление. /method: UpdatePatrialServiceAsync");
+            _logger.LogInformation($"Частичное обновление. /method: UpdatePatrialServiceAsync");
             var carent = await _productRep.GetByAsync(x => x.ProductId == id, false);
             if (carent is null)
             {
-                WatchLogger.Log($"Попытка обновить объект, которого нет в хранилище.");
+                _logger.LogWarning($"Попытка обновить объект, которого нет в хранилище.");
                 baseResponse.Status = Status.NotFound;
                 baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
@@ -170,11 +172,11 @@ namespace ProductAPI.Service.Implementations
                 var entity = _mapper.Map<UpdatePatrialProductDTO>(carent);
                 updateModel.ApplyTo(entity);
                 Product entityProduct = await _productRep.UpdateAsync(_mapper.Map<Product>(entity), carent);
-                WatchLogger.Log("Продукт отредактирован.");
+                _logger.LogInformation("Продукт отредактирован.");
                 baseResponse.DisplayMessage = "Продукт отредактирован.";
                 baseResponse.Result = _mapper.Map<ProductDTO>(entityProduct);
             }
-            WatchLogger.Log($"Ответ отправлен контролеру/ method: UpdatePatrialServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdatePatrialServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -185,11 +187,11 @@ namespace ProductAPI.Service.Implementations
         /// <exception cref="NullReferenceException"></exception>
         public async Task<IBaseResponse<ProductDTO>> UpdateServiceAsync(UpdateProductDTO updateModel)
         {
-            WatchLogger.Log($"Обновление продукта.");
+            _logger.LogInformation($"Обновление продукта.");
             var carent = await _productRep.GetByAsync(x => x.ProductId == updateModel.ProductId, false);
             if (carent is null)
             {
-                WatchLogger.Log("Попытка обновить объект, которого нет в хранилище.");
+                _logger.LogWarning("Попытка обновить объект, которого нет в хранилище.");
                 baseResponse.Status = Status.NotFound;
                 baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
@@ -199,7 +201,7 @@ namespace ProductAPI.Service.Implementations
                 baseResponse.DisplayMessage = "Продукт обновился.";
                 baseResponse.Result = _mapper.Map<ProductDTO>(product);
             }
-            WatchLogger.Log($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -212,7 +214,7 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Отфильтрованный список и сообщение</returns>
         private async Task<(IEnumerable<Product>?, string)> FilterAndSearchAsync(IEnumerable<Product>? products, string[] includeProperties, string filter, string? search = null)
         {
-            WatchLogger.Log($"Поиск продуктов по фильтру: {filter}. / method: FilterAsync");
+            _logger.LogInformation($"Поиск продуктов по фильтру: {filter}. / method: FilterAsync");
             DateTime date;
             double price;
             if (DateTime.TryParse(filter.ToString(), out date))
@@ -220,27 +222,27 @@ namespace ProductAPI.Service.Implementations
                 products = await _productRep.GetAsync(x => x.CreateDateTime.Date == date.Date, search, includeProperties: includeProperties);
 
                 if (products is null)
-                    message = Message.FilterAndSearch(true, "продуктов", filter, search);
+                    message = Message.FilterAndSearch(_logger, true, "продуктов", filter, search);
                 else
-                    message = Message.FilterAndSearch(false, "продуктов", filter, search);
+                    message = Message.FilterAndSearch(_logger, false, "продуктов", filter, search);
             }
             else if (Double.TryParse(filter.ToString(), out price))
             {
                 products = await _productRep.GetAsync(x => x.Price == price, search, includeProperties: includeProperties);
                 if (products is null)
-                    message = Message.FilterAndSearch(true, "продуктов", filter, search);
+                    message = Message.FilterAndSearch(_logger, true, "продуктов", filter, search);
                 else
-                    message = Message.FilterAndSearch(false, "продуктов", filter, search);
+                    message = Message.FilterAndSearch(_logger, false, "продуктов", filter, search);
             }
             else
             {
                 products = await _productRep.GetAsync(x => x.ProductName == filter, search, includeProperties: includeProperties);
                 if (products is null)
-                    message = Message.FilterAndSearch(true, "продуктов", filter, search);
+                    message = Message.FilterAndSearch(_logger, true, "продуктов", filter, search);
                 else
-                    message = Message.FilterAndSearch(false, "продуктов", filter, search);
+                    message = Message.FilterAndSearch(_logger, false, "продуктов", filter, search);
             }
-            WatchLogger.Log($"Ответ отправлен GetServiceAsync/ method: FilterAsync");
+            _logger.LogInformation($"Ответ отправлен GetServiceAsync/ method: FilterAsync");
             return (products, message);
         }
 

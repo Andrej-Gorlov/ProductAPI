@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.JsonPatch;
-using Newtonsoft.Json;
 using ProductAPI.Domain.Paging;
 
 namespace ProductAPI.Controllers
@@ -13,7 +12,12 @@ namespace ProductAPI.Controllers
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productSer;
-        public ProductController(IProductService productSer) => _productSer = productSer;
+        private readonly ILogger<ProductController> _logger;
+        public ProductController(IProductService productSer, ILogger<ProductController> logger)
+        {
+            _productSer = productSer;
+            _logger = logger;
+        } 
 
         #region Get
         /// <summary>
@@ -43,36 +47,36 @@ namespace ProductAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get([FromQuery] PagingQueryParameters paging, [FromQuery] string? filter, [FromQuery] string? search)
         {
-            WatchLogger.Log($"выполнен вход. /ProductController/method: Get");
+            _logger.LogInformation("выполнен вход. /ProductController/method: Get");
             IBaseResponse<PagedList<ProductDTO>>? products = null;
 
             if (!(filter is null) && !(search is null))
             {
-                WatchLogger.Log($"Получение списка продуктов по фильтру: {filter} и поиску: {search}.");
+                _logger.LogInformation($"Получение списка продуктов по фильтру: {filter} и поиску: {search}.");
                 products = await _productSer.GetServiceAsync(paging, filter, search);
             }
             else if (!(filter is null) && search is null)
             {
-                WatchLogger.Log($"Получение списка продуктов по фильтру: {filter}.");
+                _logger.LogInformation($"Получение списка продуктов по фильтру: {filter}.");
                 products = await _productSer.GetServiceAsync(paging, filter);
             }
             else if (filter is null && !(search is null))
             {
-                WatchLogger.Log($"Получение списка продуктов по поиску: {search}.");
+                _logger.LogInformation($"Получение списка продуктов по поиску: {search}.");
                 products = await _productSer.GetServiceAsync(paging, search: search);
             }
             else if (filter is null && search is null)
             {
-                WatchLogger.Log($"Получение списка продуктов.");
+                _logger.LogInformation($"Получение списка продуктов.");
                 products = await _productSer.GetServiceAsync(paging);
             }
 
             if (products.Result is null)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Get");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Get");
                 return NotFound(products);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: Get");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: Get");
             return Ok(products);
         }
         #endregion
@@ -102,20 +106,20 @@ namespace ProductAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
-            WatchLogger.Log($"выполнен вход. /ProductController/method: GetById");
+            _logger.LogInformation($"выполнен вход. /ProductController/method: GetById");
             if (id <= 0)
             {
-                WatchLogger.Log($"Ответ отправлен. id: [{id}] не может быть меньше или равно нулю. статус: {NotFound().StatusCode} /ImageController/method: GetById");
+                _logger.LogInformation($"Ответ отправлен. id: [{id}] не может быть меньше или равно нулю. статус: {NotFound().StatusCode} /ImageController/method: GetById");
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
-            WatchLogger.Log($"Получение продукта по id: {id}.");
+            _logger.LogInformation($"Получение продукта по id: {id}.");
             var product = (BaseResponse<ProductDTO>)await _productSer.GetByIdServiceAsync(id);
             if (product.Status is Status.NotFound)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: GetById");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: GetById");
                 return NotFound(product);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: GetById");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: GetById");
             return Ok(product);
         }
         #endregion
@@ -139,25 +143,25 @@ namespace ProductAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] CreateProductDTO productDTO)
         {
-            WatchLogger.Log($"выполнен вход. /ProductController/method: Create");
-            WatchLogger.Log($"Создание нового продукта.");
+            _logger.LogInformation($"выполнен вход. /ProductController/method: Create");
+            _logger.LogInformation($"Создание нового продукта.");
             var product = (BaseResponse<ProductDTO>)await _productSer.CreateServiceAsync(productDTO);
             if (product.Status is Status.ExistsName)
             {
-                WatchLogger.Log($"Ответ отправлен. Продукт с таким наименованием существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
+                _logger.LogWarning($"Ответ отправлен. Продукт с таким наименованием существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
                 return BadRequest(product);
             }
             if (product.Status is Status.ExistsUrl)
             {
-                WatchLogger.Log($"Ответ отправлен. Продукт с таким url адрессом изображения существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
+                _logger.LogWarning($"Ответ отправлен. Продукт с таким url адрессом изображения существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
                 return BadRequest(product);
             }
             if (product.Status is Status.NotCreate)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Create");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Create");
                 return BadRequest(product);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: 201 /ProductController/method: Create");
+            _logger.LogInformation($"Ответ отправлен. статус: 201 /ProductController/method: Create");
             return CreatedAtAction(nameof(Get), product);
         }
         #endregion
@@ -182,15 +186,15 @@ namespace ProductAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update([FromBody] UpdateProductDTO productDTO)
         {
-            WatchLogger.Log($"выполнен вход. /ProductController/method: Update");
-            WatchLogger.Log($"Обновление продукта.");
+            _logger.LogInformation($"выполнен вход. /ProductController/method: Update");
+            _logger.LogInformation($"Обновление продукта.");
             var product = (BaseResponse<ProductDTO>)await _productSer.UpdateServiceAsync(productDTO);
             if (product.Status is Status.NotFound)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Update");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Update");
                 return NotFound(product);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: Update");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: Update");
             return Ok(product);
         }
         #endregion
@@ -217,24 +221,24 @@ namespace ProductAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdatePatrial(int id, JsonPatchDocument<UpdatePatrialProductDTO> productDto)
         {
-            WatchLogger.Log($"выполнен вход. /ProductController/method: UpdatePatrial");
+            _logger.LogInformation($"выполнен вход. /ProductController/method: UpdatePatrial");
             if (productDto.Operations.FirstOrDefault(x => x.op == "replace") != null)
             {
                 ///////запрещино 
             }
             if (productDto is null || id <= 0)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {BadRequest().StatusCode} /ProductController/method: UpdatePatrial");
+                _logger.LogWarning($"Ответ отправлен. статус: {BadRequest().StatusCode} /ProductController/method: UpdatePatrial");
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
-            WatchLogger.Log($"Частичное обновление продукта.");
+            _logger.LogInformation($"Частичное обновление продукта.");
             var product = (BaseResponse<ProductDTO>)await _productSer.UpdatePatrialServiceAsync(id, productDto);
             if (product.Status is Status.NotFound)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: UpdatePatrial");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: UpdatePatrial");
                 return NotFound(product);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: UpdatePatrial");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: UpdatePatrial");
             return Ok(product);
         }
         #endregion
@@ -263,20 +267,20 @@ namespace ProductAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id)
         {
-            WatchLogger.Log($"выполнен вход. /ProductController/method: Delete");
+            _logger.LogInformation($"выполнен вход. /ProductController/method: Delete");
             if (id <= 0)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {BadRequest().StatusCode} /ProductController/method: Delete");
+                _logger.LogWarning($"Ответ отправлен. статус: {BadRequest().StatusCode} /ProductController/method: Delete");
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
-            WatchLogger.Log($"Удаление продукта.");
+            _logger.LogInformation($"Удаление продукта.");
             var product = await _productSer.DeleteServiceAsync(id);
             if (product.Result is false)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Delete");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: Delete");
                 return NotFound(product);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: Delete");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: Delete");
             return NoContent();
         }
         #endregion

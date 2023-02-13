@@ -1,4 +1,5 @@
-﻿using ProductAPI.Service.Helpers;
+﻿using Microsoft.Extensions.Logging;
+using ProductAPI.Service.Helpers;
 
 namespace ProductAPI.Service.Implementations
 {
@@ -7,11 +8,13 @@ namespace ProductAPI.Service.Implementations
         private IImageRepository _imageRep;
         private IMapper _mapper;
         private BaseResponse<ImageDTO> baseResponse;
+        private readonly ILogger<ImageService> _logger;
         private string message = "";
-        public ImageService(IImageRepository imageRep, IMapper mapper)
+        public ImageService(IImageRepository imageRep, IMapper mapper, ILogger<ImageService> logger)
         {
             _imageRep = imageRep;
             _mapper = mapper;
+            _logger = logger;
             baseResponse = new();
         }
         /// <summary>
@@ -21,10 +24,10 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<ImageDTO>> CreateServiceAsync(CreateImageDTO createModel)
         {
-            WatchLogger.Log($"Сохранение изображения. / method: CreateServiceAsync");
+            _logger.LogInformation($"Сохранение изображения. / method: CreateServiceAsync");
             if (await _imageRep.GetByAsync(x => x.ImageUrl == createModel.ImageUrl) != null)
             {
-                WatchLogger.Log("Изображение с таким url существует.");
+                _logger.LogWarning("Изображение с таким url существует.");
                 baseResponse.DisplayMessage = "Изображение с таким url существует.";
                 baseResponse.Status = Status.ExistsUrl;
                 return baseResponse;
@@ -32,11 +35,11 @@ namespace ProductAPI.Service.Implementations
             var image = await _imageRep.CreateAsync(_mapper.Map<Image>(createModel));
             if (image != null)
             {
-                WatchLogger.Log("Изображение сохранено.");
+                _logger.LogInformation("Изображение сохранено.");
             }
             else
             {
-                WatchLogger.Log("Изображение не сохранено.");
+                _logger.LogWarning("Изображение не сохранено.");
                 baseResponse.DisplayMessage = "Изображение не сохранено.";
                 baseResponse.Status = Status.NotCreate;
             }
@@ -50,22 +53,22 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<bool>> DeleteServiceAsync(int id)
         {
-            WatchLogger.Log($"Удаление изображения. / method: DeleteServiceAsync");
+            _logger.LogInformation($"Удаление изображения. / method: DeleteServiceAsync");
             var bResponse = new BaseResponse<bool>();
-            WatchLogger.Log($"Поиск изображения по id: {id}. / method: DeleteServiceAsync");
+            _logger.LogInformation($"Поиск изображения по id: {id}. / method: DeleteServiceAsync");
             Image image = await _imageRep.GetByAsync(x => x.ImageId == id, true);
             if (image is null)
             {
-                WatchLogger.Log($"Изображение c id: {id} не найдено.");
+                _logger.LogWarning($"Изображение c id: {id} не найдено.");
                 baseResponse.DisplayMessage = $"Изображение c id: {id} не найдено.";
                 bResponse.Result = false;
-                WatchLogger.Log($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
+                _logger.LogInformation($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
                 return bResponse;
             }
             await _imageRep.DeleteAsync(image);
             baseResponse.DisplayMessage = "Изображение удалено.";
             bResponse.Result = true;
-            WatchLogger.Log($"Ответ отправлен контролеру (true)/ method: DeleteServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру (true)/ method: DeleteServiceAsync");
             return bResponse;
         }
         /// <summary>
@@ -75,20 +78,20 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<ImageDTO>> GetByIdServiceAsync(int id)
         {
-            WatchLogger.Log($"Поиск изображения по id: {id}. / method: GetByIdServiceAsync");
+            _logger.LogInformation($"Поиск изображения по id: {id}. / method: GetByIdServiceAsync");
             Image image = await _imageRep.GetByAsync(x => x.ImageId == id);
             if (image is null)
             {
-                WatchLogger.Log($"Изображение под id [{id}] не найдено");
+                _logger.LogWarning($"Изображение под id [{id}] не найдено");
                 baseResponse.DisplayMessage = $"Изображение под id [{id}] не найдено";
                 baseResponse.Status = Status.NotFound;
             }
             else
             {
-                WatchLogger.Log($"Вывод изображения по id [{id}]");
+                _logger.LogInformation($"Вывод изображения по id [{id}]");
             }
             baseResponse.Result = _mapper.Map<ImageDTO>(image);
-            WatchLogger.Log($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -99,7 +102,7 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Базовый ответ.</returns>
         public async Task<IBaseResponse<List<ImageDTO>>> GetServiceAsync(string? filter = null, string? search = null)
         {
-            WatchLogger.Log($"Список изображений. / method: GetServiceAsync");
+            _logger.LogInformation($"Список изображений. / method: GetServiceAsync");
             var bResponse = new BaseResponse<List<ImageDTO>>();
             IEnumerable<Image>? images = null;
             if (!string.IsNullOrEmpty(filter) && !string.IsNullOrEmpty(search))
@@ -120,16 +123,16 @@ namespace ProductAPI.Service.Implementations
             }
             if (images is null)
             {
-                WatchLogger.Log("Список изображения пуст.");
+                _logger.LogWarning("Список изображения пуст.");
                 baseResponse.DisplayMessage = "Список изображения пуст.";
             }
             else
             {
-                WatchLogger.Log("Список изображения.");
+                _logger.LogInformation("Список изображения.");
                 IEnumerable<ImageDTO> listImages = _mapper.Map<IEnumerable<ImageDTO>>(images);
                 bResponse.Result = listImages.ToList();
             }
-            WatchLogger.Log($"Ответ отправлен контролеру/ method: GetServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/ method: GetServiceAsync");
             return bResponse;
         }
         /// <summary>
@@ -140,11 +143,11 @@ namespace ProductAPI.Service.Implementations
         /// <exception cref="NullReferenceException"></exception>
         public async Task<IBaseResponse<ImageDTO>> UpdateServiceAsync(UpdateImageDTO updateModel)
         {
-            WatchLogger.Log($"Обновление изображения.");
+            _logger.LogInformation($"Обновление изображения.");
             var carent = await _imageRep.GetByAsync(x => x.ImageId == updateModel.ImageId, false);
             if (carent is null)
             {
-                WatchLogger.Log("Попытка обновить объект, которого нет в хранилище.");
+                _logger.LogWarning("Попытка обновить объект, которого нет в хранилище.");
                 baseResponse.Status = Status.NotFound;
                 baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
@@ -154,7 +157,7 @@ namespace ProductAPI.Service.Implementations
                 baseResponse.DisplayMessage = "Изображение обновилось.";
                 baseResponse.Result = _mapper.Map<ImageDTO>(image);
             }
-            WatchLogger.Log($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
+            _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
             return baseResponse;
         }
         /// <summary>
@@ -165,7 +168,7 @@ namespace ProductAPI.Service.Implementations
         /// <returns>Отфильтрованный список и сообщение</returns>
         private async Task<(IEnumerable<Image>?, string)> FilterAndSearchAsync(IEnumerable<Image>? images, string filter, string? search = null)
         {
-            WatchLogger.Log($"Поиск изображения по id категории: {filter}. / method: FilterAsync");
+            _logger.LogInformation($"Поиск изображения по id категории: {filter}. / method: FilterAsync");
             int idProduct;
             Uri? uri;
             if (Int32.TryParse(filter.ToString(), out idProduct))
@@ -173,9 +176,9 @@ namespace ProductAPI.Service.Implementations
                 images = await _imageRep.GetAsync(x => x.ProductId == idProduct, search);
 
                 if (images is null)
-                    message = Message.FilterAndSearch(true, "изображений", filter, search);
+                    message = Message.FilterAndSearch(_logger, true, "изображений", filter, search);
                 else
-                    message = Message.FilterAndSearch(false, "изображений", filter, search);
+                    message = Message.FilterAndSearch(_logger, false, "изображений", filter, search);
             }
             if (Uri.TryCreate(filter, UriKind.Absolute, out uri)
                 && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
@@ -183,11 +186,11 @@ namespace ProductAPI.Service.Implementations
                 images = await _imageRep.GetAsync(x => x.ImageUrl == uri.ToString(), search);
 
                 if (images is null)
-                    message = Message.FilterAndSearch(true, "изображений", filter, search);
+                    message = Message.FilterAndSearch(_logger, true, "изображений", filter, search);
                 else
-                    message = Message.FilterAndSearch(false, "изображений", filter, search);
+                    message = Message.FilterAndSearch(_logger, false, "изображений", filter, search);
             }
-            WatchLogger.Log($"Ответ отправлен GetServiceAsync/ method: FilterAsync");
+            _logger.LogInformation($"Ответ отправлен GetServiceAsync/ method: FilterAsync");
             return (images, message);
         }
 

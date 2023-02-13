@@ -9,7 +9,12 @@
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _categorySer;
-        public CategoryController(ICategoryService categorySer) => _categorySer = categorySer;
+        private readonly ILogger<Category> _logger;
+        public CategoryController(ICategoryService categorySer, ILogger<Category> logger)
+        {
+            _categorySer = categorySer;
+            _logger = logger;
+        }
 
         #region Get
         /// <summary>
@@ -37,34 +42,34 @@
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get([FromQuery] string? filter, [FromQuery] string? search)
         {
-            WatchLogger.Log($"выполнен вход. /CategoryController/method: Get");
+            _logger.LogInformation($"выполнен вход. /CategoryController/method: Get");
             IBaseResponse<List<CategoryDTO>> categorys;
             if (!(filter is null) && !(search is null))
             {
-                WatchLogger.Log($"Получение списка категорий по фильтру: {filter} и поиску: {search}.");
+                _logger.LogInformation($"Получение списка категорий по фильтру: {filter} и поиску: {search}.");
                 categorys = await _categorySer.GetServiceAsync(filter, search);
             }
             else if (!(filter is null) && (search is null))
             {
-                WatchLogger.Log($"Получение списка категорий по фильтру: {filter}.");
+                _logger.LogInformation($"Получение списка категорий по фильтру: {filter}.");
                 categorys = await _categorySer.GetServiceAsync(filter);
             }
             else if (filter is null && !(search is null))
             {
-                WatchLogger.Log($"Получение списка категорий по поиску: {search}.");
+                _logger.LogInformation($"Получение списка категорий по поиску: {search}.");
                 categorys = await _categorySer.GetServiceAsync(search:search);
             }
             else
             {
-                WatchLogger.Log($"Получение списка категорий.");
+                _logger.LogInformation($"Получение списка категорий.");
                 categorys = await _categorySer.GetServiceAsync();
             }
             if (categorys.Result is null)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /CategoryController/method: Get");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /CategoryController/method: Get");
                 return NotFound(categorys);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /CategoryController/method: Get");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /CategoryController/method: Get");
             return Ok(categorys);
         }
         #endregion
@@ -94,20 +99,20 @@
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
-            WatchLogger.Log($"выполнен вход. /CategoryController/method: GetById");
+            _logger.LogInformation($"выполнен вход. /CategoryController/method: GetById");
             if (id <= 0)
             {
                 WatchLogger.Log($"Ответ отправлен. статус: {BadRequest().StatusCode} /CategoryController/method: GetById");
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
-            WatchLogger.Log($"Получение категории по id: {id}.");
+            _logger.LogInformation($"Получение категории по id: {id}.");
             var category = (BaseResponse<CategoryDTO>)await _categorySer.GetByIdServiceAsync(id);
             if (category.Status is Status.NotFound)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /CategoryController/method: GetById");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /CategoryController/method: GetById");
                 return NotFound(category);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /CategoryController/method: GetById");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /CategoryController/method: GetById");
             return Ok(category);
         }
         #endregion
@@ -131,20 +136,20 @@
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] CreateCategoryDTO categoryDTO)
         {
-            WatchLogger.Log($"выполнен вход. /CategoryController/method: Create");
-            WatchLogger.Log($"Создание новой категории");
+            _logger.LogInformation($"выполнен вход. /CategoryController/method: Create");
+            _logger.LogInformation($"Создание новой категории");
             var category = (BaseResponse<CategoryDTO>)await _categorySer.CreateServiceAsync(categoryDTO);
             if (category.Status is Status.ExistsName)
             {
-                WatchLogger.Log($"Ответ отправлен. Категория с таким названием уже существует. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Create");
+                _logger.LogWarning($"Ответ отправлен. Категория с таким названием уже существует. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Create");
                 return BadRequest(category);
             }
             if (category.Status is Status.NotCreate)
             {
-                WatchLogger.Log($"Ответ отправлен. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Create");
+                _logger.LogWarning($"Ответ отправлен. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Create");
                 return BadRequest(category);
             }
-            WatchLogger.Log($"Ответ отправлен. Cтатус: 201 /CategoryController/method: Create");
+            _logger.LogInformation($"Ответ отправлен. Cтатус: 201 /CategoryController/method: Create");
             return CreatedAtAction(nameof(Get), category);
         }
         #endregion
@@ -169,15 +174,15 @@
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update([FromBody] UpdateCategoryDTO categoryDTO)
         {
-            WatchLogger.Log($"выполнен вход. /CategoryController/method: Update");
-            WatchLogger.Log($"Обновление категории");
+            _logger.LogInformation($"выполнен вход. /CategoryController/method: Update");
+            _logger.LogInformation($"Обновление категории");
             var category = (BaseResponse<CategoryDTO>)await _categorySer.UpdateServiceAsync(categoryDTO);
             if (category.Status is Status.NotFound)
             {
-                WatchLogger.Log($"Ответ отправлен. Cтатус: {NotFound().StatusCode} /CategoryController/method: Update");
+                _logger.LogWarning($"Ответ отправлен. Cтатус: {NotFound().StatusCode} /CategoryController/method: Update");
                 return NotFound(category);
             }
-            WatchLogger.Log($"Ответ отправлен. Cтатус: {Ok().StatusCode} /CategoryController/method: Update");
+            _logger.LogInformation($"Ответ отправлен. Cтатус: {Ok().StatusCode} /CategoryController/method: Update");
             return Ok(category);
         }
         #endregion
@@ -206,20 +211,20 @@
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id)
         {
-            WatchLogger.Log($"выполнен вход. /CategoryController/method: Delete");
+            _logger.LogInformation($"выполнен вход. /CategoryController/method: Delete");
             if (id <= 0)
             {
-                WatchLogger.Log($"Ответ отправлен. id: [{id}] не может быть меньше или равно нулю. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Delete");
+                _logger.LogWarning($"Ответ отправлен. id: [{id}] не может быть меньше или равно нулю. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Delete");
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
-            WatchLogger.Log("Удаление категории.");
+            _logger.LogInformation("Удаление категории.");
             var category = await _categorySer.DeleteServiceAsync(id);
             if (category.Result is false)
             {
-                WatchLogger.Log($"Ответ отправлен. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Delete");
+                _logger.LogWarning($"Ответ отправлен. Cтатус: {BadRequest().StatusCode} /CategoryController/method: Delete");
                 return NotFound(category);
             }
-            WatchLogger.Log($"Ответ отправлен. Cтатус: {NoContent().StatusCode} /CategoryController/method: Delete");
+            _logger.LogInformation($"Ответ отправлен. Cтатус: {NoContent().StatusCode} /CategoryController/method: Delete");
             return NoContent();
         }
         #endregion

@@ -9,7 +9,12 @@
     public class ImageController : ControllerBase
     {
         private readonly IImageService _imageSer;
-        public ImageController(IImageService imageSer) => _imageSer = imageSer;
+        private readonly ILogger<ImageController> _logger;
+        public ImageController(IImageService imageSer, ILogger<ImageController> logger)
+        {
+            _imageSer= imageSer;
+            _logger= logger;
+        } 
 
         #region Get
         /// <summary>
@@ -36,34 +41,34 @@
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get([FromQuery] string? filter, [FromQuery] string? search)
         {
-            WatchLogger.Log($"выполнен вход. /ImageController/method: Get");
+            _logger.LogInformation($"выполнен вход. /ImageController/method: Get");
             IBaseResponse<List<ImageDTO>> immages;
             if (!(filter is null) && !(search is null))
             {
-                WatchLogger.Log($"Получение списка изображений по фильтру: {filter} и поиску: {search}.");
+                _logger.LogInformation($"Получение списка изображений по фильтру: {filter} и поиску: {search}.");
                 immages = await _imageSer.GetServiceAsync(filter, search);
             }
             else if (!(filter is null) && (search is null))
             {
-                WatchLogger.Log($"Получение списка изображений по фильтру: {filter}.");
+                _logger.LogInformation($"Получение списка изображений по фильтру: {filter}.");
                 immages = await _imageSer.GetServiceAsync(filter);
             }
             else if (filter is null && !(search is null))
             {
-                WatchLogger.Log($"Получение списка изображений по поиску: {search}.");
+                _logger.LogInformation($"Получение списка изображений по поиску: {search}.");
                 immages = await _imageSer.GetServiceAsync(search: search);
             }
             else
             {
-                WatchLogger.Log($"Получение списка изображений.");
+                _logger.LogInformation($"Получение списка изображений.");
                 immages = await _imageSer.GetServiceAsync();
             }
             if (immages.Result is null)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Get");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Get");
                 return NotFound(immages);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /ImageController/method: Get");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ImageController/method: Get");
             return Ok(immages);
         }
         #endregion
@@ -93,20 +98,20 @@
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
-            WatchLogger.Log($"выполнен вход. /ImageController/method: GetById");
+            _logger.LogInformation($"выполнен вход. /ImageController/method: GetById");
             if (id <= 0)
             {
-                WatchLogger.Log($"Ответ отправлен. id: [{id}] не может быть меньше или равно нулю. статус: {NotFound().StatusCode} /ImageController/method: GetById");
+                _logger.LogWarning($"Ответ отправлен. id: [{id}] не может быть меньше или равно нулю. статус: {NotFound().StatusCode} /ImageController/method: GetById");
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
-            WatchLogger.Log($"Получение изображения по id: {id}.");
+            _logger.LogInformation($"Получение изображения по id: {id}.");
             var image = (BaseResponse<ImageDTO>)await _imageSer.GetByIdServiceAsync(id);
             if (image.Status is Status.NotFound)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: GetById");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: GetById");
                 return NotFound(image);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /ImageController/method: GetById");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ImageController/method: GetById");
             return Ok(image);
         }
         #endregion
@@ -130,20 +135,20 @@
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] CreateImageDTO imageDTO)
         {
-            WatchLogger.Log($"выполнен вход. /ImageController/method: Create");
-            WatchLogger.Log($"Создание нового изображения.");
+            _logger.LogInformation($"выполнен вход. /ImageController/method: Create");
+            _logger.LogInformation($"Создание нового изображения.");
             var image = (BaseResponse<ImageDTO>)await _imageSer.CreateServiceAsync(imageDTO);
             if (image.Status is Status.ExistsUrl)
             {
-                WatchLogger.Log($"Ответ отправлен. Изображение с таким url существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
+                _logger.LogWarning($"Ответ отправлен. Изображение с таким url существует. Статус: {BadRequest().StatusCode} /ImageController/method: Create");
                 return BadRequest(image);
             }
             if (image.Status is Status.NotCreate)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Create");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Create");
                 return BadRequest(image);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: 201 /ImageController/method: Create");
+            _logger.LogInformation($"Ответ отправлен. статус: 201 /ImageController/method: Create");
             return CreatedAtAction(nameof(Get), image);
         }
         #endregion
@@ -168,15 +173,15 @@
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update([FromBody] UpdateImageDTO imageDTO)
         {
-            WatchLogger.Log($"выполнен вход. /ImageController/method: Update");
-            WatchLogger.Log($"Обновление изображения.");
+            _logger.LogInformation($"выполнен вход. /ImageController/method: Update");
+            _logger.LogInformation($"Обновление изображения.");
             var image = (BaseResponse<ImageDTO>)await _imageSer.UpdateServiceAsync(imageDTO);
             if (image.Status is Status.NotFound)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Update");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Update");
                 return NotFound(image);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /ImageController/method: Update");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ImageController/method: Update");
             return Ok(image);
         }
         #endregion
@@ -205,20 +210,20 @@
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id)
         {
-            WatchLogger.Log($"выполнен вход. /ImageController/method: Delete");
+            _logger.LogInformation($"выполнен вход. /ImageController/method: Delete");
             if (id <= 0)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {BadRequest().StatusCode} /ImageController/method: Delete");
+                _logger.LogWarning($"Ответ отправлен. статус: {BadRequest().StatusCode} /ImageController/method: Delete");
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
-            WatchLogger.Log($"Удаление изображения.");
+            _logger.LogInformation($"Удаление изображения.");
             var image = await _imageSer.DeleteServiceAsync(id);
             if (image.Result is false)
             {
-                WatchLogger.Log($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Delete");
+                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Delete");
                 return NotFound(image);
             }
-            WatchLogger.Log($"Ответ отправлен. статус: {Ok().StatusCode} /ImageController/method: Delete");
+            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ImageController/method: Delete");
             return NoContent();
         }
         #endregion
