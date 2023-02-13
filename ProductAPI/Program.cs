@@ -56,7 +56,7 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1.0",
-        Title = "ProductAPI V1",
+        Title = "ProductAPI V1 (Product)",
         Description = "Web API 2022",
         TermsOfService = new Uri("https://vk.com/id306326375"),
         Contact = new OpenApiContact
@@ -74,7 +74,25 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v2", new OpenApiInfo
     {
         Version = "v2.0",
-        Title = "ProductAPI V2 ...",
+        Title = "ProductAPI V2 (Category)",
+        Description = "Web API.",
+        TermsOfService = new Uri("https://vk.com/id306326375"),
+        Contact = new OpenApiContact
+        {
+            Name = "Горлов Андрей",
+            Email = "avgorlov899@gmail.com",
+            Url = new Uri("https://github.com/Andrej-Gorlov")
+        },
+        License = new OpenApiLicense
+        {
+            Name = "Лицензия...",
+            Url = new Uri("https://vk.com/id306326375")
+        }
+    });
+    options.SwaggerDoc("v3", new OpenApiInfo
+    {
+        Version = "v3.0",
+        Title = "ProductAPI V3 (Image)",
         Description = "Web API.",
         TermsOfService = new Uri("https://vk.com/id306326375"),
         Contact = new OpenApiContact
@@ -113,6 +131,7 @@ if (app.Environment.IsDevelopment())
     {
         option.SwaggerEndpoint("/swagger/v1/swagger.json", "ProductAPI V1");
         option.SwaggerEndpoint("/swagger/v2/swagger.json", "ProductAPI V2");
+        option.SwaggerEndpoint("/swagger/v3/swagger.json", "ProductAPI V3");
     });
 }
 

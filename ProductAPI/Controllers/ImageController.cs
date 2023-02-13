@@ -3,9 +3,8 @@
     [Route("api/v{version:apiVersion}")]
     [Produces("application/json")]
     [ApiController]
-    [ApiVersion("1.0")]
-    [ApiVersion("2.0")]
-    [ApiVersionNeutral]
+    [ApiVersion("3.0")]
+    //[ApiVersionNeutral]
     public class ImageController : ControllerBase
     {
         private readonly IImageService _imageSer;

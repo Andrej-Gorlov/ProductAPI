@@ -1,11 +1,10 @@
 ﻿namespace ProductAPI.Controllers
 {
+    [ApiVersion("2.0")]
     [Route("api/v{version:apiVersion}")]
     [Produces("application/json")]
     [ApiController]
-    [ApiVersion("1.0")]
-    [ApiVersion("2.0")]
-    [ApiVersionNeutral]
+    //[ApiVersionNeutral]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _categorySer;
@@ -92,7 +91,7 @@
         /// <response code="400"> Недопустимое значение ввода </response>
         /// <response code="404"> категория не найдена </response>
         [HttpGet]
-        [ResponseCache(Duration = 120)] 
+        [ResponseCache(Duration = 120)]
         [Route("category/{id:int}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

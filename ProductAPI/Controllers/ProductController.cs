@@ -7,8 +7,7 @@ namespace ProductAPI.Controllers
     [Produces("application/json")]
     [ApiController]
     [ApiVersion("1.0")]
-    [ApiVersion("2.0")]
-    [ApiVersionNeutral]
+    //[ApiVersionNeutral]
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productSer;
