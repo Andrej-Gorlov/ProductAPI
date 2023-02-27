@@ -1,11 +1,11 @@
 ﻿namespace ProductAPI.Domain.Paging
 {
-    public class ParameterPagedList
+    public record struct ParameterPagedList
     {
-        public int CurrentPage { get; private set; }
-        public int TotalPages { get; private set; }
-        public int PageSize { get; private set; }
-        public int TotalCount { get; private set; }
+        public int CurrentPage { get; init ; }
+        public int TotalPages { get; init ; }
+        public int PageSize { get; init; }
+        public int TotalCount { get; init; }
 
         public bool HasPrevious;
         public bool HasNext;

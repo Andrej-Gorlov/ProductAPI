@@ -53,7 +53,7 @@ namespace ProductAPI.DAL.Repository
                 products = products.AsNoTracking();
             }
             _logger.LogInformation($"Возвращен отфильтрованный список. Filter: {filter.Body},Type: {filter.Type}.");
-            return await products.Include(x=>x.Category). FirstOrDefaultAsync(filter);
+            return await products.Include(x=>x.Category).Include(x=>x.SecondaryImages).FirstOrDefaultAsync(filter);
         }
     }
 }

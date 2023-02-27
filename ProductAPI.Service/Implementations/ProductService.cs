@@ -188,7 +188,7 @@ namespace ProductAPI.Service.Implementations
         public async Task<IBaseResponse<ProductDTO>> UpdateServiceAsync(UpdateProductDTO updateModel)
         {
             _logger.LogInformation($"Обновление продукта.");
-            var carent = await _productRep.GetByAsync(x => x.ProductId == updateModel.ProductId, false);
+            var carent = await _productRep.GetByAsync(x => x.ProductId == updateModel.ProductId);
             if (carent is null)
             {
                 _logger.LogWarning("Попытка обновить объект, которого нет в хранилище.");

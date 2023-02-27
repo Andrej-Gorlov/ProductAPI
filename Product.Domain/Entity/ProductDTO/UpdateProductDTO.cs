@@ -2,12 +2,13 @@
 {
     public record struct UpdateProductDTO
     {
-        public UpdateProductDTO(int productId, string productName, double price, string description, UpdateCategoryDTO? category, string mainImageUrl, ICollection<UpdateImageDTO>? secondaryImages)
+        public UpdateProductDTO(int productId, string productName, double price, string description,int categoryId, UpdateCategoryDTO? category, string mainImageUrl, ICollection<UpdateImageDTO>? secondaryImages)
         {
             ProductId = productId;
             ProductName = productName;
             Price = price;
             Description = description;
+            CategoryId = categoryId;
             Category = category;
             MainImageUrl = mainImageUrl;
             SecondaryImages = secondaryImages;
@@ -24,7 +25,7 @@
 
         [StringLength(1000, MinimumLength = 0, ErrorMessage = "Описание продукта не должно превышать 1000 символов.")]
         public string Description { get; init; } = string.Empty;
-        //public int CategoryId { get; set; }
+        public int CategoryId { get; set; }
         public UpdateCategoryDTO? Category { get; init; }
 
         [StringLength(int.MaxValue, MinimumLength = 5, ErrorMessage = "Длина url адреса должна быть не менее 5 символов")]

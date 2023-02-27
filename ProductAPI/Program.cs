@@ -129,9 +129,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(option =>
     {
-        option.SwaggerEndpoint("/swagger/v1/swagger.json", "ProductAPI V1");
-        option.SwaggerEndpoint("/swagger/v2/swagger.json", "ProductAPI V2");
-        option.SwaggerEndpoint("/swagger/v3/swagger.json", "ProductAPI V3");
+        option.SwaggerEndpoint("/swagger/v1/swagger.json", "ProductAPI V1 (Product)");
+        option.SwaggerEndpoint("/swagger/v2/swagger.json", "ProductAPI V2 (Category)");
+        option.SwaggerEndpoint("/swagger/v3/swagger.json", "ProductAPI V3 (Image)");
     });
 }
 

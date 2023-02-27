@@ -5,7 +5,7 @@
         public ParameterPagedList? Parameter { get; init; }
         public PagedList(List<T> items, int count, int pageNumber, int pageSize)
         {
-            Parameter = new(count, pageNumber, pageSize, (int)Math.Ceiling(count / (double)pageSize));
+            Parameter = new(pageNumber, (int)Math.Ceiling(count / (double)pageSize), pageSize, count);
             AddRange(items);
         }
         public static PagedList<T> ToPagedList(IEnumerable<T> source, int pageNumber, int pageSize)
