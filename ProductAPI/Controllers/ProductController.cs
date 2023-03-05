@@ -280,7 +280,8 @@ namespace ProductAPI.Controllers
                 return NotFound(product);
             }
             _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: Delete");
-            return NoContent();
+            return Ok(product);
+            //return NoContent();
         }
         #endregion
     }
