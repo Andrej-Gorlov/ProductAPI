@@ -145,7 +145,7 @@ namespace ProductAPI.Service.Implementations
         public async Task<IBaseResponse<CategoryDTO>> UpdateServiceAsync(UpdateCategoryDTO updateModel)
         {
             _logger.LogInformation($"Обновление категории.");
-            var carent = await _categoryRep.GetByAsync(x => x.CategoryId == updateModel.CategoryId, false);
+            var carent = await _categoryRep.GetByAsync(x => x.CategoryId == updateModel.CategoryId);
             if (carent is null)
             {
                 _logger.LogWarning("Попытка обновить объект, которого нет в хранилище.");

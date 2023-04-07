@@ -4,11 +4,12 @@ namespace ProductAPI.Domain.Entity.CategoryDTO
 {
     public record struct CreateCategoryDTO
     {
-        public CreateCategoryDTO(int categoryId, string categoryName, string imageUrl)
+        public CreateCategoryDTO(int categoryId, string categoryName, string imageUrl, string description)
         {
             CategoryId = categoryId;
             CategoryName = categoryName;
             ImageUrl = imageUrl;
+            Description = description;
         }
 
         public int CategoryId { get; init; } 
@@ -18,5 +19,7 @@ namespace ProductAPI.Domain.Entity.CategoryDTO
         //[StringLength(int.MaxValue,MinimumLength = 5, ErrorMessage = "Длина url адреса должна быть не менее 5 символов")]
         //[Url(ErrorMessage = "Не веерно введен url адрес")]
         public string ImageUrl { get; init; } = string.Empty;
+        [StringLength(200, MinimumLength = 0, ErrorMessage = "Описание продукта не должно превышать 200 символов.")]
+        public string Description { get; init; } = string.Empty;
     }
 }
