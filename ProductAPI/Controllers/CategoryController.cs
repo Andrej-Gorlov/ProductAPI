@@ -224,7 +224,7 @@
                 return NotFound(category);
             }
             _logger.LogInformation($"Ответ отправлен. Cтатус: {NoContent().StatusCode} /CategoryController/method: Delete");
-            return Ok(category);
+            return Ok(category); 
         }
         #endregion
     }
