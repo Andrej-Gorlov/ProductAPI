@@ -8,6 +8,7 @@
         public double Price { get; set; }
         public DateTime CreateDateTime { get; set; } = DateTime.Now;
         public string Description { get; set; } = string.Empty;
+        public string ShortDescription { get; set; } =string.Empty;
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public virtual Category? Category { get; set; }
