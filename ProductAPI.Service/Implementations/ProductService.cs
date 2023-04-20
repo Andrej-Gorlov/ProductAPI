@@ -237,7 +237,10 @@ namespace ProductAPI.Service.Implementations
             else
             {
                 products = await _productRep.GetAsync(x => x.ProductName == filter, search, includeProperties: includeProperties);
-                if (products is null)
+
+                if (products.Count() is 0)  products = await _productRep.GetAsync(x => x.Category.CategoryName == filter, search, includeProperties: includeProperties);
+
+                if (products.Count() is 0)
                     message = Message.FilterAndSearch(_logger, true, "продуктов", filter, search);
                 else
                     message = Message.FilterAndSearch(_logger, false, "продуктов", filter, search);
