@@ -1,22 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using ProductAPI.Service.Helpers;
-
-namespace ProductAPI.Service.Implementations
+﻿namespace ProductAPI.Service.Implementations
 {
-    public class ImageService : IImageService
+    public class ImageService : BaseService<ImageService, ImageDTO>, IImageService
     {
         private IImageRepository _imageRep;
-        private IMapper _mapper;
-        private BaseResponse<ImageDTO> baseResponse;
-        private readonly ILogger<ImageService> _logger;
-        private string message = "";
-        public ImageService(IImageRepository imageRep, IMapper mapper, ILogger<ImageService> logger)
-        {
-            _imageRep = imageRep;
-            _mapper = mapper;
-            _logger = logger;
-            baseResponse = new();
-        }
+        public ImageService(IImageRepository imageRep, IMapper mapper, ILogger<ImageService> logger):base(mapper, logger,new()) => _imageRep = imageRep;
+
         /// <summary>
         /// Сохранение изображения.
         /// </summary>
@@ -28,9 +16,9 @@ namespace ProductAPI.Service.Implementations
             if (await _imageRep.GetByAsync(x => x.ImageUrl == createModel.ImageUrl) != null)
             {
                 _logger.LogWarning("Изображение с таким url существует.");
-                baseResponse.DisplayMessage = "Изображение с таким url существует.";
-                baseResponse.Status = Status.ExistsUrl;
-                return baseResponse;
+                _baseResponse.DisplayMessage = "Изображение с таким url существует.";
+                _baseResponse.Status = Status.ExistsUrl;
+                return _baseResponse;
             }
             var image = await _imageRep.CreateAsync(_mapper.Map<Image>(createModel));
             if (image != null)
@@ -40,11 +28,11 @@ namespace ProductAPI.Service.Implementations
             else
             {
                 _logger.LogWarning("Изображение не сохранено.");
-                baseResponse.DisplayMessage = "Изображение не сохранено.";
-                baseResponse.Status = Status.NotCreate;
+                _baseResponse.DisplayMessage = "Изображение не сохранено.";
+                _baseResponse.Status = Status.NotCreate;
             }
-            baseResponse.Result = _mapper.Map<ImageDTO>(image);
-            return baseResponse;
+            _baseResponse.Result = _mapper.Map<ImageDTO>(image);
+            return _baseResponse;
         }
         /// <summary>
         /// Удаление изображения
@@ -60,13 +48,13 @@ namespace ProductAPI.Service.Implementations
             if (image is null)
             {
                 _logger.LogWarning($"Изображение c id: {id} не найдено.");
-                baseResponse.DisplayMessage = $"Изображение c id: {id} не найдено.";
+                _baseResponse.DisplayMessage = $"Изображение c id: {id} не найдено.";
                 bResponse.Result = false;
                 _logger.LogInformation($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
                 return bResponse;
             }
             await _imageRep.DeleteAsync(image);
-            baseResponse.DisplayMessage = "Изображение удалено.";
+            _baseResponse.DisplayMessage = "Изображение удалено.";
             bResponse.Result = true;
             _logger.LogInformation($"Ответ отправлен контролеру (true)/ method: DeleteServiceAsync");
             return bResponse;
@@ -83,16 +71,16 @@ namespace ProductAPI.Service.Implementations
             if (image is null)
             {
                 _logger.LogWarning($"Изображение под id [{id}] не найдено");
-                baseResponse.DisplayMessage = $"Изображение под id [{id}] не найдено";
-                baseResponse.Status = Status.NotFound;
+                _baseResponse.DisplayMessage = $"Изображение под id [{id}] не найдено";
+                _baseResponse.Status = Status.NotFound;
             }
             else
             {
                 _logger.LogInformation($"Вывод изображения по id [{id}]");
             }
-            baseResponse.Result = _mapper.Map<ImageDTO>(image);
+            _baseResponse.Result = _mapper.Map<ImageDTO>(image);
             _logger.LogInformation($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
-            return baseResponse;
+            return _baseResponse;
         }
         /// <summary>
         /// Список изображений (возможно приминение поиска)
@@ -109,13 +97,13 @@ namespace ProductAPI.Service.Implementations
             {
                 var result = await FilterAndSearchAsync(images, filter, search);
                 images = result.Item1;
-                baseResponse.DisplayMessage = result.Item2;
+                _baseResponse.DisplayMessage = result.Item2;
             }
             if (!string.IsNullOrEmpty(filter) && string.IsNullOrEmpty(search))
             {
                 var result = await FilterAndSearchAsync(images, filter);
                 images = result.Item1;
-                baseResponse.DisplayMessage = result.Item2;
+                _baseResponse.DisplayMessage = result.Item2;
             }
             if (string.IsNullOrEmpty(filter) && string.IsNullOrEmpty(search))
             {
@@ -124,7 +112,7 @@ namespace ProductAPI.Service.Implementations
             if (images is null)
             {
                 _logger.LogWarning("Список изображения пуст.");
-                baseResponse.DisplayMessage = "Список изображения пуст.";
+                _baseResponse.DisplayMessage = "Список изображения пуст.";
             }
             else
             {
@@ -148,17 +136,17 @@ namespace ProductAPI.Service.Implementations
             if (carent is null)
             {
                 _logger.LogWarning("Попытка обновить объект, которого нет в хранилище.");
-                baseResponse.Status = Status.NotFound;
-                baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
+                _baseResponse.Status = Status.NotFound;
+                _baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
             else
             {
                 var image = await _imageRep.UpdateAsync(_mapper.Map<Image>(updateModel), carent); ;
-                baseResponse.DisplayMessage = "Изображение обновилось.";
-                baseResponse.Result = _mapper.Map<ImageDTO>(image);
+                _baseResponse.DisplayMessage = "Изображение обновилось.";
+                _baseResponse.Result = _mapper.Map<ImageDTO>(image);
             }
             _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
-            return baseResponse;
+            return _baseResponse;
         }
         /// <summary>
         /// Фильтр и поиск изображения по значению

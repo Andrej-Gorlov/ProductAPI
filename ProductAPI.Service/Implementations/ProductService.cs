@@ -1,25 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
-using ProductAPI.Service.Helpers;
-using Ubiety.Dns.Core;
-
-namespace ProductAPI.Service.Implementations
+﻿namespace ProductAPI.Service.Implementations
 {
-    public class ProductService : IProductService
+    public class ProductService : BaseService<ProductService, ProductDTO>,IProductService
     {
         private IProductRepository _productRep;
-        private ICategoryRepository _categoryRep;
-        private IMapper _mapper;
-        private BaseResponse<ProductDTO> baseResponse;
-        private ILogger<ProductService> _logger;
-        private string message = "";
+
         public ProductService(IProductRepository productRep, ICategoryRepository categoryRep, IMapper mapper, ILogger<ProductService> logger)
-        {
-            _productRep = productRep;
-            _categoryRep = categoryRep;
-            _mapper = mapper;
-            _logger = logger;
-            baseResponse = new();
-        }
+            :base(mapper, logger,new()) => _productRep = productRep;
+
         /// <summary>
         /// Создание продукта.
         /// </summary>
@@ -31,16 +18,16 @@ namespace ProductAPI.Service.Implementations
             if (await _productRep.GetByAsync(x => x.ProductName == createModel.ProductName) != null)
             {
                 _logger.LogWarning("Продукт с таким наименованием существует.");
-                baseResponse.DisplayMessage = "Продукт с таким наименованием существует.";
-                baseResponse.Status = Status.ExistsName;
-                return baseResponse;
+                _baseResponse.DisplayMessage = "Продукт с таким наименованием существует.";
+                _baseResponse.Status = Status.ExistsName;
+                return _baseResponse;
             }
             if (await _productRep.GetByAsync(x => x.MainImageUrl == createModel.MainImageUrl) != null)
             {
                 _logger.LogWarning("Продукт с таким url адрессом изображения существует.");
-                baseResponse.DisplayMessage = "Продукт с таким url адрессом изображения существует.";
-                baseResponse.Status = Status.ExistsUrl;
-                return baseResponse;
+                _baseResponse.DisplayMessage = "Продукт с таким url адрессом изображения существует.";
+                _baseResponse.Status = Status.ExistsUrl;
+                return _baseResponse;
             }
             var product = await _productRep.CreateAsync(_mapper.Map<Product>(createModel));
             if (product != null)
@@ -50,12 +37,12 @@ namespace ProductAPI.Service.Implementations
             else
             {
                 _logger.LogWarning("Продукт не создан.");
-                baseResponse.DisplayMessage = "Продукт не создан.";
-                baseResponse.Status = Status.NotCreate;
+                _baseResponse.DisplayMessage = "Продукт не создан.";
+                _baseResponse.Status = Status.NotCreate;
             }
-            baseResponse.Result = _mapper.Map<ProductDTO>(product);
+            _baseResponse.Result = _mapper.Map<ProductDTO>(product);
             _logger.LogInformation($"Ответ отправлен контролеру/method: CreateServiceAsync");
-            return baseResponse;
+            return _baseResponse;
         }
         /// <summary>
         /// Удаление продукта
@@ -94,16 +81,16 @@ namespace ProductAPI.Service.Implementations
             if (product is null)
             {
                 _logger.LogWarning($"Продукт по id [{id}] не найден.");
-                baseResponse.DisplayMessage = $"Продукт по id [{id}] не найден.";
-                baseResponse.Status = Status.NotFound;
+                _baseResponse.DisplayMessage = $"Продукт по id [{id}] не найден.";
+                _baseResponse.Status = Status.NotFound;
             }
             else
             {
                 _logger.LogInformation($"Вывод продукта по id [{id}]");
             }
-            baseResponse.Result = _mapper.Map<ProductDTO>(product);
+            _baseResponse.Result = _mapper.Map<ProductDTO>(product);
             _logger.LogInformation($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
-            return baseResponse;
+            return _baseResponse;
         }
         /// <summary>
         /// Список продуктов (возможно приминение фильра и поиска)
@@ -164,8 +151,8 @@ namespace ProductAPI.Service.Implementations
             if (carent is null)
             {
                 _logger.LogWarning($"Попытка обновить объект, которого нет в хранилище.");
-                baseResponse.Status = Status.NotFound;
-                baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
+                _baseResponse.Status = Status.NotFound;
+                _baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
             else
             {
@@ -173,11 +160,11 @@ namespace ProductAPI.Service.Implementations
                 updateModel.ApplyTo(entity);
                 Product entityProduct = await _productRep.UpdateAsync(_mapper.Map<Product>(entity), carent);
                 _logger.LogInformation("Продукт отредактирован.");
-                baseResponse.DisplayMessage = "Продукт отредактирован.";
-                baseResponse.Result = _mapper.Map<ProductDTO>(entityProduct);
+                _baseResponse.DisplayMessage = "Продукт отредактирован.";
+                _baseResponse.Result = _mapper.Map<ProductDTO>(entityProduct);
             }
             _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdatePatrialServiceAsync");
-            return baseResponse;
+            return _baseResponse;
         }
         /// <summary>
         /// Обновление продукта.
@@ -192,17 +179,17 @@ namespace ProductAPI.Service.Implementations
             if (carent is null)
             {
                 _logger.LogWarning("Попытка обновить объект, которого нет в хранилище.");
-                baseResponse.Status = Status.NotFound;
-                baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
+                _baseResponse.Status = Status.NotFound;
+                _baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
             else
             {
                 var product = await _productRep.UpdateAsync(_mapper.Map<Product>(updateModel), carent);
-                baseResponse.DisplayMessage = "Продукт обновился.";
-                baseResponse.Result = _mapper.Map<ProductDTO>(product);
+                _baseResponse.DisplayMessage = "Продукт обновился.";
+                _baseResponse.Result = _mapper.Map<ProductDTO>(product);
             }
             _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
-            return baseResponse;
+            return _baseResponse;
         }
         /// <summary>
         /// Фильтр и поиск продуктов по значению

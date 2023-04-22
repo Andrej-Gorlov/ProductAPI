@@ -8,3 +8,5 @@ global using AutoMapper;
 global using ProductAPI.DAL.Interfaces;
 global using ProductAPI.Service.Interfaces;
 global using ProductAPI.Domain.Entity;
+global using Microsoft.Extensions.Logging;
+global using ProductAPI.Service.Helpers;

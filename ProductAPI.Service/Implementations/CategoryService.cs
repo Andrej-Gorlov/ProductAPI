@@ -1,22 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using ProductAPI.Service.Helpers;
-
-namespace ProductAPI.Service.Implementations
+﻿namespace ProductAPI.Service.Implementations
 {
-    public class CategoryService : ICategoryService
+    public class CategoryService : BaseService<CategoryService, CategoryDTO>, ICategoryService
     {
         private ICategoryRepository _categoryRep;
-        private IMapper _mapper;
-        private BaseResponse<CategoryDTO> baseResponse;
-        private readonly ILogger<CategoryService> _logger;
-        private string message = "";
-        public CategoryService(ICategoryRepository categoryRep, IMapper mapper, ILogger<CategoryService> logger)
-        {
-            _categoryRep = categoryRep;
-            _mapper = mapper;
-            _logger = logger;
-            baseResponse = new();
-        }
+        public CategoryService(ICategoryRepository categoryRep, IMapper mapper, ILogger<CategoryService> logger):base(mapper,logger,new()) => _categoryRep = categoryRep;
+
         /// <summary>
         /// Создание категории.
         /// </summary>
@@ -28,9 +16,9 @@ namespace ProductAPI.Service.Implementations
             if (await _categoryRep.GetByAsync(x => x.CategoryName == createModel.CategoryName) != null)
             {
                 _logger.LogWarning("Категория с таким наименованием существует.");
-                baseResponse.DisplayMessage = "Категория с таким наименованием существует.";
-                baseResponse.Status = Status.ExistsName;
-                return baseResponse;
+                _baseResponse.DisplayMessage = "Категория с таким наименованием существует.";
+                _baseResponse.Status = Status.ExistsName;
+                return _baseResponse;
             }
             var category = await _categoryRep.CreateAsync(_mapper.Map<Category>(createModel));
             if (category != null)
@@ -40,12 +28,12 @@ namespace ProductAPI.Service.Implementations
             else
             {
                 _logger.LogInformation("Категория не создана.");
-                baseResponse.DisplayMessage = "Категория не создана.";
-                baseResponse.Status = Status.NotCreate;
+                _baseResponse.DisplayMessage = "Категория не создана.";
+                _baseResponse.Status = Status.NotCreate;
             }
-            baseResponse.Result = _mapper.Map<CategoryDTO>(category);
+            _baseResponse.Result = _mapper.Map<CategoryDTO>(category);
             _logger.LogInformation($"Ответ отправлен контролеру/method: CreateServiceAsync");
-            return baseResponse;
+            return _baseResponse;
         }
         /// <summary>
         /// Удаление категории
@@ -84,16 +72,16 @@ namespace ProductAPI.Service.Implementations
             if (category is null)
             {
                 _logger.LogWarning($"Категория по id [{id}] не найдена");
-                baseResponse.DisplayMessage = $"Категория по id [{id}] не найдена";
-                baseResponse.Status = Status.NotFound;
+                _baseResponse.DisplayMessage = $"Категория по id [{id}] не найдена";
+                _baseResponse.Status = Status.NotFound;
             }
             else
             {
                 _logger.LogInformation($"Вывод категории по id [{id}]");
             }
-            baseResponse.Result = _mapper.Map<CategoryDTO>(category);
+            _baseResponse.Result = _mapper.Map<CategoryDTO>(category);
             _logger.LogInformation($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
-            return baseResponse;
+            return _baseResponse;
         }
         /// <summary>
         /// Список категорий (возможно приминение фильра и поиска)
@@ -110,13 +98,13 @@ namespace ProductAPI.Service.Implementations
             {
                 var result = await FilterAndSearchAsync(categorys, filter, search);
                 categorys = result.Item1;
-                baseResponse.DisplayMessage = result.Item2;
+                _baseResponse.DisplayMessage = result.Item2;
             }
             if (!string.IsNullOrEmpty(filter) && string.IsNullOrEmpty(search))
             {
                 var result = await FilterAndSearchAsync(categorys, filter);
                 categorys = result.Item1;
-                baseResponse.DisplayMessage = result.Item2;
+                _baseResponse.DisplayMessage = result.Item2;
             }
             if (string.IsNullOrEmpty(filter) && string.IsNullOrEmpty(search))
             {
@@ -125,7 +113,7 @@ namespace ProductAPI.Service.Implementations
             if (categorys is null)
             {
                 _logger.LogInformation("Список категорий пуст.");
-                baseResponse.DisplayMessage = "Список категорий пуст.";
+                _baseResponse.DisplayMessage = "Список категорий пуст.";
             }
             else
             {
@@ -149,17 +137,17 @@ namespace ProductAPI.Service.Implementations
             if (carent is null)
             {
                 _logger.LogWarning("Попытка обновить объект, которого нет в хранилище.");
-                baseResponse.Status = Status.NotFound;
-                baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
+                _baseResponse.Status = Status.NotFound;
+                _baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
             }
             else
             {
                 var category = await _categoryRep.UpdateAsync(_mapper.Map<Category>(updateModel), carent); ;
-                baseResponse.DisplayMessage = "Категория обновилась.";
-                baseResponse.Result = _mapper.Map<CategoryDTO>(category);
+                _baseResponse.DisplayMessage = "Категория обновилась.";
+                _baseResponse.Result = _mapper.Map<CategoryDTO>(category);
             }
             _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
-            return baseResponse;
+            return _baseResponse;
         }
         /// <summary>
         /// Фильтр и поиск категорий по значению
