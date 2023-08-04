@@ -6,7 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplicationServices(builder.Configuration);
 
+builder.Services.AddApplicationDocumentation();
+
 builder.Logging.AddWatchDogLogger();
+
+builder.AddAppAuthetication();
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -32,8 +37,10 @@ app.UseWatchDog(opt =>
     opt.WatchPagePassword = builder.Configuration.GetConnectionString("PasswordWatchDog");
 });
 
+app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseStaticFiles();
+app.UseCors("cors");
 app.MapControllers();
 
 app.UseWatchDogExceptionLogger();

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.JsonPatch;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.JsonPatch;
 using ProductAPI.Domain.Paging;
 
 namespace ProductAPI.Controllers
@@ -40,8 +41,8 @@ namespace ProductAPI.Controllers
         /// <response code="200"> Запрос прошёл. (Успех) </response>
         /// <response code="404"> Список продуктов не найден. </response>
         [HttpGet]
-        [ResponseCache(CacheProfileName = "Default30")]
         [Route("products")]
+        [ResponseCache(CacheProfileName = "Default30")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get([FromQuery] PagingQueryParameters paging, [FromQuery] string? filter, [FromQuery] string? search)
@@ -140,6 +141,7 @@ namespace ProductAPI.Controllers
         [Route("product")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateProductDTO productDTO)
         {
             _logger.LogInformation($"выполнен вход. /ProductController/method: Create");
@@ -180,6 +182,7 @@ namespace ProductAPI.Controllers
         /// <response code="400"> Введены недопустимые данные. </response>
         /// <response code="404"> Продукт не найден. </response>
         [HttpPut]
+        [Authorize]
         [Route("product")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
