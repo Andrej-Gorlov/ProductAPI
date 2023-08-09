@@ -124,13 +124,17 @@
         /// <returns>Создаётся категория</returns>
         /// <remarks>
         /// 
-        ///     POST /category   
+        ///     POST /category
+        ///     
+        ///         Authorize roles: ADMIN
         ///     
         /// </remarks>
         /// <response code="201"> Категория создана. </response>
         /// <response code="400"> Введены недопустимые данные. </response>
+        /// <response code="401"> Пользователь не авторизован. </response>
         [HttpPost]
         [Route("category")]
+        [Authorize(Roles = $"{UserRoles.ADMIN}", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] CreateCategoryDTO categoryDTO)
@@ -162,13 +166,17 @@
         /// <remarks>
         ///
         ///     PUT /category
+        ///     
+        ///         Authorize roles: ADMIN
         ///
         /// </remarks>
         /// <response code="200"> Запрос прошёл. (Успех) </response>
         /// <response code="400"> Введены недопустимые данные. </response>
+        /// <response code="401"> Пользователь не авторизован. </response>
         /// <response code="404"> Категория не найдена. </response>
         [HttpPut]
         [Route("category")]
+        [Authorize(Roles = $"{UserRoles.ADMIN}", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update([FromBody] UpdateCategoryDTO categoryDTO)
@@ -196,15 +204,18 @@
         /// Образец запроса:
         /// 
         ///     DELETE /category/{id}
-        ///     
+        ///         
+        ///        Authorize roles: ADMIN
         ///        Id: 0   // Введите id категории, которую нужно удалить.
         ///     
         /// </remarks>
         /// <response code="204"> Категория удалёна. (нет содержимого) </response>
         /// <response code="400"> Недопустимое значение ввода </response>
+        /// <response code="401"> Пользователь не авторизован. </response>
         /// <response code="404"> Категория c указанным id не найдена. </response>
         [HttpDelete]
         [Route("category/{id}")]
+        [Authorize(Roles = $"{UserRoles.ADMIN}", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

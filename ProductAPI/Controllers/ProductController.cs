@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.JsonPatch;
-using ProductAPI.Domain.Paging;
-
-namespace ProductAPI.Controllers
+﻿namespace ProductAPI.Controllers
 {
     [Route("api/v{version:apiVersion}")]
     [Produces("application/json")]
@@ -132,16 +128,21 @@ namespace ProductAPI.Controllers
         /// <returns>Создаётся продукт.</returns>
         /// <remarks>
         /// 
-        ///     POST /product   
+        ///     POST /product 
+        ///     
+        ///         Authorize roles: ADMIN, OWNER
         ///     
         /// </remarks>
         /// <response code="201"> Продукт создан. </response>
         /// <response code="400"> Введены недопустимые данные. </response>
+        /// <response code="401"> Пользователь не авторизован. </response>
         [HttpPost]
         [Route("product")]
+        [Authorize(Roles = $"{UserRoles.ADMIN}, ${UserRoles.OWNER}", 
+            AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Authorize]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Create([FromBody] CreateProductDTO productDTO)
         {
             _logger.LogInformation($"выполнен вход. /ProductController/method: Create");
@@ -176,16 +177,21 @@ namespace ProductAPI.Controllers
         /// <remarks>
         ///
         ///     PUT /product
+        ///     
+        ///         Authorize roles: ADMIN, OWNER
         ///
         /// </remarks>
         /// <response code="200"> Запрос прошёл. (Успех) </response>
         /// <response code="400"> Введены недопустимые данные. </response>
         /// <response code="404"> Продукт не найден. </response>
+        /// <response code="401"> Пользователь не авторизован. </response>
         [HttpPut]
-        [Authorize]
         [Route("product")]
+        [Authorize(Roles = $"{UserRoles.ADMIN}, ${UserRoles.OWNER}",
+            AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Update([FromBody] UpdateProductDTO productDTO)
         {
             _logger.LogInformation($"выполнен вход. /ProductController/method: Update");
@@ -211,16 +217,23 @@ namespace ProductAPI.Controllers
         /// <remarks>
         ///
         ///     Patch /product
+        ///     
+        ///         Authorize roles: ADMIN, OWNER
         ///
         /// </remarks>
         /// <response code="200"> Запрос прошёл. (Успех) </response>
         /// <response code="400"> Введены недопустимые данные. </response>
         /// <response code="404"> Продукт не найден. </response>
+        /// <response code="401"> Пользователь не авторизован. </response>
         [HttpPatch]
         [Route("product")]
+        [Authorize(Roles = $"{UserRoles.ADMIN}, ${UserRoles.OWNER}",
+            AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> UpdatePatrial(int id, JsonPatchDocument<UpdatePatrialProductDTO> productDto)
         {
             _logger.LogInformation($"выполнен вход. /ProductController/method: UpdatePatrial");
@@ -255,18 +268,22 @@ namespace ProductAPI.Controllers
         /// Образец запроса:
         /// 
         ///     DELETE /product/{id}
-        ///     
+        ///         
+        ///        Authorize roles: ADMIN
         ///        Id: 0   // Введите id продукта, которого нужно удалить.
         ///     
         /// </remarks>
         /// <response code="204"> Продукт удалён. (нет содержимого) </response>
         /// <response code="400"> Недопустимое значение ввода </response>
         /// <response code="404"> Продукт c указанным id не найден. </response>
+        /// <response code="401"> Пользователь не авторизован. </response>
         [HttpDelete]
         [Route("product/{id}")]
+        [Authorize(Roles = UserRoles.ADMIN)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation($"выполнен вход. /ProductController/method: Delete");

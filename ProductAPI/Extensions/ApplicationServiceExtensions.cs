@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using ProductAPI.DAL;
 using ProductAPI.DAL.Interfaces;
 using ProductAPI.DAL.Repository;

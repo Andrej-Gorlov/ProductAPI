@@ -7,3 +7,8 @@ global using Microsoft.AspNetCore.Mvc;
 global using ProductAPI.Domain.Response;
 global using ProductAPI.Service.Interfaces;
 global using WatchDog;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.AspNetCore.Authorization;
+global using ProductAPI.Domain;
+global using Microsoft.AspNetCore.JsonPatch;
+global using ProductAPI.Domain.Paging;

@@ -123,13 +123,17 @@
         /// <returns>Создаётся изображения</returns>
         /// <remarks>
         /// 
-        ///     POST /image   
+        ///     POST /image
+        ///     
+        ///         Authorize roles: ADMIN
         ///     
         /// </remarks>
         /// <response code="201"> Изображение создано. </response>
         /// <response code="400"> Введены недопустимые данные. </response>
+        /// <response code="401"> Пользователь не авторизован. </response>
         [HttpPost]
         [Route("image")]
+        [Authorize(Roles = $"{UserRoles.ADMIN}", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] CreateImageDTO imageDTO)
@@ -161,13 +165,17 @@
         /// <remarks>
         ///
         ///     PUT /image
+        ///     
+        ///         Authorize roles: ADMIN
         ///
         /// </remarks>
         /// <response code="200"> Запрос прошёл. (Успех) </response>
         /// <response code="400"> Введены недопустимые данные. </response>
+        /// <response code="401"> Пользователь не авторизован. </response>
         /// <response code="404"> Изображение не найдено. </response>
         [HttpPut]
         [Route("image")]
+        [Authorize(Roles = $"{UserRoles.ADMIN}", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update([FromBody] UpdateImageDTO imageDTO)
@@ -195,15 +203,18 @@
         /// Образец запроса:
         /// 
         ///     DELETE /image/{id}
-        ///     
+        ///         
+        ///        Authorize roles: ADMIN
         ///        Id: 0   // Введите id изображения, которое нужно удалить.
         ///     
         /// </remarks>
         /// <response code="204"> Изображение удалёно. (нет содержимого) </response>
         /// <response code="400"> Недопустимое значение ввода </response>
+        /// <response code="401"> Пользователь не авторизован. </response>
         /// <response code="404"> Изображение c указанным id не найдено. </response>
         [HttpDelete]
         [Route("image/{id}")]
+        [Authorize(Roles = $"{UserRoles.ADMIN}", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
