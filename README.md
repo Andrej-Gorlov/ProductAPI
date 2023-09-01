@@ -6,6 +6,7 @@ The stack of technologies used in this project:
 - Entity Framework
 - WatchDog
 - Automapper
+- Cloudinary API
 - Swagger
   
 Implemented in the project:
