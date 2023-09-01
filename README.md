@@ -7,7 +7,7 @@ The stack of technologies used in this project:
 - WatchDog
 - Automapper
 - Swagger
-- 
+  
 Implemented in the project:
 -	Layered architecture
 -	REST API
