@@ -2,6 +2,7 @@
 using ProductAPI.DAL;
 using ProductAPI.DAL.Interfaces;
 using ProductAPI.DAL.Repository;
+using ProductAPI.Service.Helpers;
 using ProductAPI.Service.Implementations;
 using WatchDog.src.Enums;
 
@@ -27,6 +28,10 @@ namespace ProductAPI.Extensions
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IImageService, ImageService>();
             services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<IImageAccessorService, ImageAccessorService>();
+            services.AddScoped<ICloudinaryActions, CloudinaryActions>();
+
+            services.Configure<CloudinarySettings>(config.GetSection("Cloudinary"));
 
             services.AddApiVersioning(option =>
             {

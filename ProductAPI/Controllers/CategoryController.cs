@@ -138,7 +138,7 @@
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Create([FromBody] CreateCategoryDTO categoryDTO)
+        public async Task<IActionResult> Create([FromForm] CreateCategoryDTO categoryDTO)
         {
             _logger.LogInformation($"выполнен вход. /CategoryController/method: Create");
             _logger.LogInformation($"Создание новой категории");
@@ -181,7 +181,7 @@
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Update([FromBody] UpdateCategoryDTO categoryDTO)
+        public async Task<IActionResult> Update([FromForm] UpdateCategoryDTO categoryDTO)
         {
             _logger.LogInformation($"выполнен вход. /CategoryController/method: Update");
             _logger.LogInformation($"Обновление категории");

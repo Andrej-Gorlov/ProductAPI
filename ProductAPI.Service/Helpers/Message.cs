@@ -1,5 +1,4 @@
 ﻿using DnsClient.Internal;
-using Microsoft.Extensions.Logging;
 
 namespace ProductAPI.Service.Helpers
 {

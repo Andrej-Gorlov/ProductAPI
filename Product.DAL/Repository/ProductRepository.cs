@@ -1,6 +1,4 @@
-﻿using ProductAPI.Domain.Entity.ProductDTO;
-
-namespace ProductAPI.DAL.Repository
+﻿namespace ProductAPI.DAL.Repository
 {
     public class ProductRepository : BaseRepository<Product>, IProductRepository
     {

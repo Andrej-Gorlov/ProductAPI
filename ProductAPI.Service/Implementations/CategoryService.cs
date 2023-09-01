@@ -2,9 +2,16 @@
 {
     public class CategoryService : BaseService<CategoryService, CategoryDTO>, ICategoryService
     {
-        private ICategoryRepository _categoryRep;
-        public CategoryService(ICategoryRepository categoryRep, IMapper mapper, ILogger<CategoryService> logger):base(mapper,logger,new()) => _categoryRep = categoryRep;
+        private readonly ICategoryRepository _categoryRep;
+        private readonly IImageAccessorService _imageAccessorSer;
+        public CategoryService(ICategoryRepository categoryRep, IImageAccessorService imageAccessorSer, IMapper mapper, ILogger<CategoryService> logger) 
+            : base(mapper, logger, new()) 
+        {
+            _categoryRep = categoryRep;
+            _imageAccessorSer = imageAccessorSer;
+        }
 
+        #region Create
         /// <summary>
         /// Создание категории.
         /// </summary>
@@ -18,10 +25,25 @@
                 _logger.LogWarning("Категория с таким наименованием существует.");
                 _baseResponse.DisplayMessage = "Категория с таким наименованием существует.";
                 _baseResponse.Status = Status.ExistsName;
-                return _baseResponse;
+                return _baseResponse!;
             }
-            var category = await _categoryRep.CreateAsync(_mapper.Map<Category>(createModel));
-            if (category != null)
+
+            var category = _mapper.Map<Category>(createModel);
+
+            if (createModel.Image != null)
+            {
+                var image = await _imageAccessorSer.AddImageAsync(createModel.Image).ConfigureAwait(true);
+                if (image is null) _logger.LogInformation("Изображение не создано.");
+                else
+                {
+                    _logger.LogInformation("Изображение создано.");
+                    category.ImageUrl = image.Url;
+                    category.ImageId = image.PublicId;
+                };
+            };
+
+            var categoryRep = await _categoryRep.CreateAsync(category);
+            if (categoryRep != null)
             {
                 _logger.LogInformation("Категория создана.");
             }
@@ -31,10 +53,13 @@
                 _baseResponse.DisplayMessage = "Категория не создана.";
                 _baseResponse.Status = Status.NotCreate;
             }
-            _baseResponse.Result = _mapper.Map<CategoryDTO>(category);
+            _baseResponse.Result = _mapper.Map<CategoryDTO>(categoryRep);
             _logger.LogInformation($"Ответ отправлен контролеру/method: CreateServiceAsync");
-            return _baseResponse;
+            return _baseResponse!;
         }
+        #endregion
+
+        #region Delete
         /// <summary>
         /// Удаление категории
         /// </summary>
@@ -54,12 +79,18 @@
                 _logger.LogInformation($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
                 return baseResponse;
             }
+
+            if (category.ImageId != null) await _imageAccessorSer.DeleteImageAsync(category.ImageId);
+
             await _categoryRep.DeleteAsync(category);
             baseResponse.DisplayMessage = "Категория удалена.";
             baseResponse.Result = true;
             _logger.LogInformation($"Ответ отправлен контролеру (true)/ method: DeleteServiceAsync");
             return baseResponse;
         }
+        #endregion
+
+        #region GetById
         /// <summary>
         /// Вывод категории
         /// </summary>
@@ -81,8 +112,11 @@
             }
             _baseResponse.Result = _mapper.Map<CategoryDTO>(category);
             _logger.LogInformation($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
-            return _baseResponse;
+            return _baseResponse!;
         }
+        #endregion
+
+        #region Get
         /// <summary>
         /// Список категорий (возможно приминение фильра и поиска)
         /// </summary>
@@ -92,7 +126,7 @@
         public async Task<IBaseResponse<List<CategoryDTO>>> GetServiceAsync(string? filter = null, string? search = null)
         {
             _logger.LogInformation($"Список категорий. / method: GetServiceAsync");
-            var bResponse = new BaseResponse <List<CategoryDTO>>();
+            var bResponse = new BaseResponse<List<CategoryDTO>>();
             IEnumerable<Category>? categorys = null;
             if (!string.IsNullOrEmpty(filter) && !string.IsNullOrEmpty(search))
             {
@@ -124,6 +158,9 @@
             _logger.LogInformation($"Ответ отправлен контролеру/ method: GetServiceAsync");
             return bResponse;
         }
+        #endregion
+
+        #region Update
         /// <summary>
         /// Обновление категории.
         /// </summary>
@@ -142,13 +179,28 @@
             }
             else
             {
-                var category = await _categoryRep.UpdateAsync(_mapper.Map<Category>(updateModel), carent); ;
+                var category = _mapper.Map<Category>(updateModel);
+                if (updateModel.Image  != null)
+                {
+                    var image = await _imageAccessorSer.AddImageAsync(updateModel.Image, updateModel.ImageId).ConfigureAwait(true);
+                    if (image is null) _logger.LogInformation("Изображение не создано.");
+                    else
+                    {
+                        _logger.LogInformation("Изображение создано.");
+                        category.ImageUrl = image.Url;
+                        category.ImageId = image.PublicId;
+                    };
+                }
+                var categoryRep = await _categoryRep.UpdateAsync(category, carent); ;
                 _baseResponse.DisplayMessage = "Категория обновилась.";
-                _baseResponse.Result = _mapper.Map<CategoryDTO>(category);
+                _baseResponse.Result = _mapper.Map<CategoryDTO>(categoryRep);
             }
             _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
-            return _baseResponse;
+            return _baseResponse!;
         }
+        #endregion
+
+        #region Filter
         /// <summary>
         /// Фильтр и поиск категорий по значению
         /// </summary>
@@ -159,7 +211,7 @@
         {
             _logger.LogInformation($"Поиск категории по фильтру: {filter}. / method: FilterAsync");
             Uri? uri;
-            if (Uri.TryCreate(filter, UriKind.Absolute, out uri) 
+            if (Uri.TryCreate(filter, UriKind.Absolute, out uri)
                 && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
             {
                 categorys = await _categoryRep.GetAsync(x => x.ImageUrl == uri.ToString(), search);
@@ -180,33 +232,6 @@
             _logger.LogInformation($"Ответ отправлен GetServiceAsync/ method: FilterAsync");
             return (categorys, message);
         }
-
-        /// <summary>
-        /// Поиск категории по значению 
-        /// </summary>
-        /// <param name="categorys"></param>
-        /// <param name="search"></param>
-        /// <returns>Искомые категории и сообщение</returns>
-        //private async Task<(IEnumerable<Category>?, string)> SearchAsync(IEnumerable<Category>? categorys, string search)
-        //{
-        //    WatchLogger.Log($"Поиск категории по: {search}. / method: SearchAsync");
-        //    await Task.Factory.StartNew(() =>
-        //    {
-        //        categorys = categorys.Where(
-        //            x => EF.Functions.Like(x.CategoryName.ToUpper(), $"%{search.ToUpper()}%"));
-        //    });
-        //    if (categorys.Count() is 0)
-        //    {
-        //        WatchLogger.Log(message + $"\n по поиску: {search} не чего не найдено.");
-        //        message += $"\n по поиску: {search} не чего не найдено.";
-        //    }
-        //    else
-        //    {
-        //        WatchLogger.Log(message + $"\n по попоиску: {search}");
-        //        message += $"\n по попоиску: {search}";
-        //    }
-        //    WatchLogger.Log($"Ответ отправлен GetServiceAsync/ method: SearchAsync");
-        //    return (categorys, message);
-        //}
+        #endregion
     }
 }

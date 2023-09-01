@@ -1,4 +1,6 @@
-﻿namespace ProductAPI.DAL.Repository
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace ProductAPI.DAL.Repository
 {
     public class BaseRepository<T> : IBaseRepository<T> where T : class
     {
@@ -29,7 +31,7 @@
 
         public async Task<T> UpdateAsync(T entity, T carent)
         {
-             _db.Entry(carent).CurrentValues.SetValues(entity);
+            _db.Entry(carent).CurrentValues.SetValues(entity);
             await SeveAsync();
             _logger.LogInformation("Сущность обновлена.");
             return entity;

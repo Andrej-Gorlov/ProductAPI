@@ -2,11 +2,16 @@
 {
     public class ProductService : BaseService<ProductService, ProductDTO>,IProductService
     {
-        private IProductRepository _productRep;
+        private readonly IProductRepository _productRep;
+        private readonly ICloudinaryActions _cloudinary;
+        public ProductService(IProductRepository productRep, ICloudinaryActions cloudinary, IMapper mapper, ILogger<ProductService> logger)
+            :base(mapper, logger, new())
+        {
+            _productRep = productRep;
+            _cloudinary = cloudinary;
+        }
 
-        public ProductService(IProductRepository productRep, ICategoryRepository categoryRep, IMapper mapper, ILogger<ProductService> logger)
-            :base(mapper, logger,new()) => _productRep = productRep;
-
+        #region Create
         /// <summary>
         /// Создание продукта.
         /// </summary>
@@ -22,28 +27,37 @@
                 _baseResponse.Status = Status.ExistsName;
                 return _baseResponse;
             }
-            if (await _productRep.GetByAsync(x => x.MainImageUrl == createModel.MainImageUrl) != null)
+
+            Product product = _mapper.Map<Product>(createModel);
+            if(createModel.FileMainImage != null && createModel.FileMainImage.Length > 0)
             {
-                _logger.LogWarning("Продукт с таким url адрессом изображения существует.");
-                _baseResponse.DisplayMessage = "Продукт с таким url адрессом изображения существует.";
-                _baseResponse.Status = Status.ExistsUrl;
-                return _baseResponse;
+                var image = await _cloudinary.AddImageAsync(createModel.FileMainImage, product.ProductId);
+                AssigningImageToProduct(image, product);
             }
-            var product = await _productRep.CreateAsync(_mapper.Map<Product>(createModel));
-            if (product != null)
+            if (createModel.FileSecondaryImages != null)
+            {
+                var secondaryImages = await _cloudinary.AddImagesAsync(createModel.FileSecondaryImages, product.ProductId);
+                AssigningImagesToProduct(secondaryImages, product);
+            }
+
+            var productRep = await _productRep.CreateAsync(product);
+            if (productRep != null)
             {
                 _logger.LogInformation("Продукт создан.");
             }
             else
             {
                 _logger.LogWarning("Продукт не создан.");
-                _baseResponse.DisplayMessage = "Продукт не создан.";
+                _baseResponse.DisplayMessage += "\nПродукт не создан.";
                 _baseResponse.Status = Status.NotCreate;
             }
-            _baseResponse.Result = _mapper.Map<ProductDTO>(product);
+            _baseResponse.Result = _mapper.Map<ProductDTO>(productRep);
             _logger.LogInformation($"Ответ отправлен контролеру/method: CreateServiceAsync");
             return _baseResponse;
         }
+        #endregion
+
+        #region Delete
         /// <summary>
         /// Удаление продукта
         /// </summary>
@@ -63,12 +77,29 @@
                 _logger.LogInformation($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
                 return baseResponse;
             }
+            if (product.ImageId != null)
+            {
+                await _cloudinary.DeleteImageAsync(product.ImageId);
+            }
+            if (product.SecondaryImages != null)
+            {
+                foreach (var image in product.SecondaryImages)
+                {
+                    if (image != null)
+                    {
+                        await _cloudinary.DeleteImageAsync(image.ImageId);
+                    }
+                }
+            }
             await _productRep.DeleteAsync(product);
             baseResponse.DisplayMessage = "Продукт удален.";
             baseResponse.Result = true;
             _logger.LogInformation($"Ответ отправлен контролеру (true)/ method: DeleteServiceAsync");
             return baseResponse;
         }
+        #endregion
+
+        #region GetById
         /// <summary>
         /// Вывод продукта
         /// </summary>
@@ -92,6 +123,9 @@
             _logger.LogInformation($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
             return _baseResponse;
         }
+        #endregion
+
+        #region Get
         /// <summary>
         /// Список продуктов (возможно приминение фильра и поиска)
         /// </summary>
@@ -103,7 +137,7 @@
         {
             _logger.LogInformation($"Список продуктов. /method: GetServiceAsync");
             var baseResponse = new BaseResponse<PagedList<ProductDTO>>();
-            string[] includeProperties = { nameof(ProductDTO.Category), nameof(ProductDTO.SecondaryImages)};
+            string[] includeProperties = { nameof(ProductDTO.Category), nameof(ProductDTO.SecondaryImages) };
             IEnumerable<Product>? products = null;
             if (!string.IsNullOrEmpty(filter) && !string.IsNullOrEmpty(search))
             {
@@ -137,35 +171,9 @@
             _logger.LogInformation($"Ответ отправлен контролеру/ method: GetServiceAsync");
             return baseResponse;
         }
-        /// <summary>
-        /// Частичное обновление
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="updateModel"></param>
-        /// <returns>Базовый ответ.</returns>
-        /// <exception cref="NullReferenceException"></exception>
-        public async Task<IBaseResponse<ProductDTO>> UpdatePatrialServiceAsync(int id, JsonPatchDocument<UpdatePatrialProductDTO> updateModel)
-        {
-            _logger.LogInformation($"Частичное обновление. /method: UpdatePatrialServiceAsync");
-            var carent = await _productRep.GetByAsync(x => x.ProductId == id, false);
-            if (carent is null)
-            {
-                _logger.LogWarning($"Попытка обновить объект, которого нет в хранилище.");
-                _baseResponse.Status = Status.NotFound;
-                _baseResponse.DisplayMessage = "Попытка обновить объект, которого нет в хранилище.";
-            }
-            else
-            {
-                var entity = _mapper.Map<UpdatePatrialProductDTO>(carent);
-                updateModel.ApplyTo(entity);
-                Product entityProduct = await _productRep.UpdateAsync(_mapper.Map<Product>(entity), carent);
-                _logger.LogInformation("Продукт отредактирован.");
-                _baseResponse.DisplayMessage = "Продукт отредактирован.";
-                _baseResponse.Result = _mapper.Map<ProductDTO>(entityProduct);
-            }
-            _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdatePatrialServiceAsync");
-            return _baseResponse;
-        }
+        #endregion
+
+        #region Update
         /// <summary>
         /// Обновление продукта.
         /// </summary>
@@ -184,13 +192,28 @@
             }
             else
             {
-                var product = await _productRep.UpdateAsync(_mapper.Map<Product>(updateModel), carent);
+                var product = _mapper.Map<Product>(updateModel);
+                if (updateModel.ImageId != null && updateModel.FileMainImage != null)
+                {
+                    var image = await _cloudinary.UpdateImageAsync(updateModel.FileMainImage, updateModel.ProductId, updateModel.ImageId);
+                    AssigningImageToProduct(image, product);
+                }
+                if (updateModel.SecondaryImagesId != null && updateModel.FileSecondaryImages != null && 
+                    updateModel.SecondaryImagesId.Count == updateModel.FileSecondaryImages.Count)
+                {
+                    var secondaryImages = await _cloudinary.UpdateImagesAsync(updateModel.FileSecondaryImages, product.ProductId, updateModel.SecondaryImagesId);
+                    AssigningImagesToProduct(secondaryImages, product);
+                }
+                var productRep = await _productRep.UpdateAsync(product, carent);
                 _baseResponse.DisplayMessage = "Продукт обновился.";
-                _baseResponse.Result = _mapper.Map<ProductDTO>(product);
+                _baseResponse.Result = _mapper.Map<ProductDTO>(productRep);
             }
             _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
             return _baseResponse;
         }
+        #endregion
+
+        #region Filter
         /// <summary>
         /// Фильтр и поиск продуктов по значению
         /// </summary>
@@ -203,7 +226,7 @@
         {
             _logger.LogInformation($"Поиск продуктов по фильтру: {filter}. / method: FilterAsync");
             DateTime date;
-            double price;
+            decimal price;
             if (DateTime.TryParse(filter.ToString(), out date))
             {
                 products = await _productRep.GetAsync(x => x.CreateDateTime.Date == date.Date, search, includeProperties: includeProperties);
@@ -213,7 +236,7 @@
                 else
                     message = Message.FilterAndSearch(_logger, false, "продуктов", filter, search);
             }
-            else if (Double.TryParse(filter.ToString(), out price))
+            else if (Decimal.TryParse(filter.ToString(), out price))
             {
                 products = await _productRep.GetAsync(x => x.Price == price, search, includeProperties: includeProperties);
                 if (products is null)
@@ -225,7 +248,7 @@
             {
                 products = await _productRep.GetAsync(x => x.ProductName == filter, search, includeProperties: includeProperties);
 
-                if (products.Count() is 0)  products = await _productRep.GetAsync(x => x.Category.CategoryName == filter, search, includeProperties: includeProperties);
+                if (products.Count() is 0)  products = await _productRep.GetAsync(x => x.Category!.CategoryName == filter, search, includeProperties: includeProperties);
 
                 if (products.Count() is 0)
                     message = Message.FilterAndSearch(_logger, true, "продуктов", filter, search);
@@ -235,39 +258,48 @@
             _logger.LogInformation($"Ответ отправлен GetServiceAsync/ method: FilterAsync");
             return (products, message);
         }
+        #endregion
 
+        #region Add image(s) in product
         /// <summary>
-        /// Поиск продукта по значению 
+        /// Add image in product
         /// </summary>
-        /// <param name="products"></param>
-        /// <param name="search"></param>
-        /// <returns>Искомые продукты и сообщение</returns>
-        //private async Task<(IEnumerable<Product>?, string)> SearchAsync(IQueryable<Product>? products, string search)
-        //{
-        //    WatchLogger.Log($"Поиск продукта по: {search}. / method: SearchAsync");
-        //    await Task.Factory.StartNew(() =>
-        //    {
-
-        //    //x => EF.Functions.Like(x.ImageUrl.ToUpper(), $"%{search.ToUpper()}%"));
-        //    products = products.Where( //<- проверить на коректность (CreateDateTime)
-        //            x => EF.Functions.Like(x.ProductName, $"%{search}%")
-        //            //|| x.Price.ToString().Contains(search, StringComparison.OrdinalIgnoreCase)
-        //            //|| x.CreateDateTime.ToString("d").Contains(search, StringComparison.OrdinalIgnoreCase)
-        //            || EF.Functions.Like(x.Category.CategoryName, $"%{search}%")
-        //            );
-        //    });
-        //    if (products.Count() is 0)
-        //    {
-        //        WatchLogger.Log(message + $"\n по поиску: {search} не чего не найдено.");
-        //        message += $"\n по поиску: {search} не чего не найдено.";
-        //    }
-        //    else
-        //    {
-        //        WatchLogger.Log(message + $"\n по попоиску: {search}");
-        //        message += $"\n по попоиску: {search}";
-        //    }
-        //    WatchLogger.Log($"Ответ отправлен GetServiceAsync/ method: SearchAsync");
-        //    return (products, message);
-        //}
+        /// <param name="image"></param>
+        /// <param name="product"></param>
+        private void AssigningImageToProduct(Image? image, Product product)
+        {
+            if (image != null)
+            {
+                _logger.LogInformation("Изображение добавлено в API сloudinary.");
+                _baseResponse.DisplayMessage = "Изображение добавлено в API сloudinary.";
+                product.ImageId = image.ImageId;
+                product.ImageUrl = image.ImageUrl;
+            }
+            else
+            {
+                _logger.LogInformation("Изображение не добавлено в API сloudinary.");
+                _baseResponse.DisplayMessage = "Изображение не добавлено в API сloudinary.";
+            }
+        }
+        /// <summary>
+        /// Add images in product
+        /// </summary>
+        /// <param name="images"></param>
+        /// <param name="product"></param>
+        private void AssigningImagesToProduct(IList<Image>? images, Product product)
+        {
+            if (images != null)
+            {
+                _logger.LogInformation("Cписок изображений обнавлён в API сloudinary.");
+                _baseResponse.DisplayMessage += $"\nCписок изображений добавлен в API сloudinary.";
+                product.SecondaryImages = images;
+            }
+            else
+            {
+                _logger.LogInformation("Cписок изображений не обнавлён в API сloudinary.");
+                _baseResponse.DisplayMessage += $"\nCписок изображений не добавлен в API сloudinary.";
+            }
+        }
+        #endregion
     }
 }

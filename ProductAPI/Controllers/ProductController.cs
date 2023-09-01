@@ -143,7 +143,7 @@
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Create([FromBody] CreateProductDTO productDTO)
+        public async Task<IActionResult> Create([FromForm] CreateProductDTO productDTO)
         {
             _logger.LogInformation($"выполнен вход. /ProductController/method: Create");
             _logger.LogInformation($"Создание нового продукта.");
@@ -192,7 +192,7 @@
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Update([FromBody] UpdateProductDTO productDTO)
+        public async Task<IActionResult> Update([FromForm] UpdateProductDTO productDTO)
         {
             _logger.LogInformation($"выполнен вход. /ProductController/method: Update");
             _logger.LogInformation($"Обновление продукта.");
@@ -203,57 +203,6 @@
                 return NotFound(product);
             }
             _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: Update");
-            return Ok(product);
-        }
-        #endregion
-
-        #region UpdatePatrial
-        /// <summary>
-        /// Частичное редактирование продукта.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="productDto"></param>
-        /// <returns>Частичное обновление продукта.</returns>
-        /// <remarks>
-        ///
-        ///     Patch /product
-        ///     
-        ///         Authorize roles: ADMIN, OWNER
-        ///
-        /// </remarks>
-        /// <response code="200"> Запрос прошёл. (Успех) </response>
-        /// <response code="400"> Введены недопустимые данные. </response>
-        /// <response code="404"> Продукт не найден. </response>
-        /// <response code="401"> Пользователь не авторизован. </response>
-        [HttpPatch]
-        [Route("product")]
-        [Authorize(Roles = $"{UserRoles.ADMIN}, ${UserRoles.OWNER}",
-            AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdatePatrial(int id, JsonPatchDocument<UpdatePatrialProductDTO> productDto)
-        {
-            _logger.LogInformation($"выполнен вход. /ProductController/method: UpdatePatrial");
-            if (productDto.Operations.FirstOrDefault(x => x.op == "replace") != null)
-            {
-                ///////запрещино 
-            }
-            if (productDto is null || id <= 0)
-            {
-                _logger.LogWarning($"Ответ отправлен. статус: {BadRequest().StatusCode} /ProductController/method: UpdatePatrial");
-                return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
-            }
-            _logger.LogInformation($"Частичное обновление продукта.");
-            var product = (BaseResponse<ProductDTO>)await _productSer.UpdatePatrialServiceAsync(id, productDto);
-            if (product.Status is Status.NotFound)
-            {
-                _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ProductController/method: UpdatePatrial");
-                return NotFound(product);
-            }
-            _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: UpdatePatrial");
             return Ok(product);
         }
         #endregion
@@ -301,7 +250,6 @@
             }
             _logger.LogInformation($"Ответ отправлен. статус: {Ok().StatusCode} /ProductController/method: Delete");
             return Ok(product);
-            //return NoContent();
         }
         #endregion
     }

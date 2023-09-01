@@ -91,20 +91,20 @@
         /// <response code="404"> Изображение не найдено </response>
         [HttpGet]
         [ResponseCache(Duration = 120)]
-        [Route("image/{id:int}")]
+        [Route("image/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(string id)
         {
             _logger.LogInformation($"выполнен вход. /ImageController/method: GetById");
-            if (id <= 0)
+            if (id is null && id is "")
             {
                 _logger.LogWarning($"Ответ отправлен. id: [{id}] не может быть меньше или равно нулю. статус: {NotFound().StatusCode} /ImageController/method: GetById");
                 return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
             }
             _logger.LogInformation($"Получение изображения по id: {id}.");
-            var image = (BaseResponse<ImageDTO>)await _imageSer.GetByIdServiceAsync(id);
+            var image = (BaseResponse<ImageDTO>)await _imageSer.GetByIdServiceAsync(id!);
             if (image.Status is Status.NotFound)
             {
                 _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: GetById");
@@ -137,7 +137,7 @@
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Create([FromBody] CreateImageDTO imageDTO)
+        public async Task<IActionResult> Create([FromForm] CreateImageDTO imageDTO)
         {
             _logger.LogInformation($"выполнен вход. /ImageController/method: Create");
             _logger.LogInformation($"Создание нового изображения.");
@@ -180,7 +180,7 @@
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update([FromBody] UpdateImageDTO imageDTO)
+        public async Task<IActionResult> Update([FromForm] UpdateImageDTO imageDTO)
         {
             _logger.LogInformation($"выполнен вход. /ImageController/method: Update");
             _logger.LogInformation($"Обновление изображения.");
@@ -199,7 +199,7 @@
         /// <summary>
         /// Удаление изображения.
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="idD"></param>
         /// <returns>Изображение удаляется.</returns>
         /// <remarks>
         /// Образец запроса:
@@ -215,22 +215,22 @@
         /// <response code="401"> Пользователь не авторизован. </response>
         /// <response code="404"> Изображение c указанным id не найдено. </response>
         [HttpDelete]
-        [Route("image/{id}")]
+        [Route("image/{idD}")]
         [Authorize(Roles = $"{UserRoles.ADMIN}", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(string idD)
         {
             _logger.LogInformation($"выполнен вход. /ImageController/method: Delete");
-            if (id <= 0)
+            if (idD is null && idD is "")
             {
                 _logger.LogWarning($"Ответ отправлен. статус: {BadRequest().StatusCode} /ImageController/method: Delete");
-                return BadRequest($"id: [{id}] не может быть меньше или равно нулю");
+                return BadRequest($"id: [{idD}] не может быть меньше или равно нулю");
             }
             _logger.LogInformation($"Удаление изображения.");
-            var image = await _imageSer.DeleteServiceAsync(id);
+            var image = await _imageSer.DeleteServiceAsync(idD!);
             if (image.Result is false)
             {
                 _logger.LogWarning($"Ответ отправлен. статус: {NotFound().StatusCode} /ImageController/method: Delete");

@@ -2,9 +2,16 @@
 {
     public class ImageService : BaseService<ImageService, ImageDTO>, IImageService
     {
-        private IImageRepository _imageRep;
-        public ImageService(IImageRepository imageRep, IMapper mapper, ILogger<ImageService> logger):base(mapper, logger,new()) => _imageRep = imageRep;
+        private readonly IImageRepository _imageRep;
+        private readonly ICloudinaryActions _cloudinary;
+        public ImageService(IImageRepository imageRep, ICloudinaryActions cloudinary,
+            IMapper mapper, ILogger<ImageService> logger):base(mapper, logger, new())
+        {
+            _imageRep = imageRep;
+            _cloudinary = cloudinary;
+        }
 
+        #region Create
         /// <summary>
         /// Сохранение изображения.
         /// </summary>
@@ -13,15 +20,12 @@
         public async Task<IBaseResponse<ImageDTO>> CreateServiceAsync(CreateImageDTO createModel)
         {
             _logger.LogInformation($"Сохранение изображения. / method: CreateServiceAsync");
-            if (await _imageRep.GetByAsync(x => x.ImageUrl == createModel.ImageUrl) != null)
-            {
-                _logger.LogWarning("Изображение с таким url существует.");
-                _baseResponse.DisplayMessage = "Изображение с таким url существует.";
-                _baseResponse.Status = Status.ExistsUrl;
-                return _baseResponse;
-            }
-            var image = await _imageRep.CreateAsync(_mapper.Map<Image>(createModel));
-            if (image != null)
+
+            var image = _mapper.Map<Image>(createModel);
+            image = await _cloudinary.AddImageAsync(createModel.FileImage!, image.ProductId);
+
+            var imageRep = await _imageRep.CreateAsync(image!);
+            if (imageRep != null)
             {
                 _logger.LogInformation("Изображение сохранено.");
             }
@@ -31,15 +35,18 @@
                 _baseResponse.DisplayMessage = "Изображение не сохранено.";
                 _baseResponse.Status = Status.NotCreate;
             }
-            _baseResponse.Result = _mapper.Map<ImageDTO>(image);
+            _baseResponse.Result = _mapper.Map<ImageDTO>(imageRep);
             return _baseResponse;
         }
+        #endregion
+
+        #region Delete
         /// <summary>
         /// Удаление изображения
         /// </summary>
         /// <param name="id"></param>
         /// <returns>Базовый ответ.</returns>
-        public async Task<IBaseResponse<bool>> DeleteServiceAsync(int id)
+        public async Task<IBaseResponse<bool>> DeleteServiceAsync(string id)
         {
             _logger.LogInformation($"Удаление изображения. / method: DeleteServiceAsync");
             var bResponse = new BaseResponse<bool>();
@@ -53,18 +60,29 @@
                 _logger.LogInformation($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
                 return bResponse;
             }
+            if (!await _cloudinary.DeleteImageAsync(image.ImageId))
+            {
+                _logger.LogWarning($"Изображение c id: {image.ImageId} в сloudinary не найдено.");
+                _baseResponse.DisplayMessage = $"Изображение c id: {image.ImageId} в сloudinary не найдено.";
+                bResponse.Result = false;
+                _logger.LogInformation($"Ответ отправлен контролеру (false)/ method: DeleteServiceAsync");
+                return bResponse;
+            }
             await _imageRep.DeleteAsync(image);
             _baseResponse.DisplayMessage = "Изображение удалено.";
             bResponse.Result = true;
             _logger.LogInformation($"Ответ отправлен контролеру (true)/ method: DeleteServiceAsync");
             return bResponse;
         }
+        #endregion
+
+        #region GetById
         /// <summary>
         /// Вывод изображения
         /// </summary>
         /// <param name="id"></param>
         /// <returns>Базовый ответ.</returns>
-        public async Task<IBaseResponse<ImageDTO>> GetByIdServiceAsync(int id)
+        public async Task<IBaseResponse<ImageDTO>> GetByIdServiceAsync(string id)
         {
             _logger.LogInformation($"Поиск изображения по id: {id}. / method: GetByIdServiceAsync");
             Image image = await _imageRep.GetByAsync(x => x.ImageId == id);
@@ -82,6 +100,9 @@
             _logger.LogInformation($"Ответ отправлен контролеру/ method: GetByIdServiceAsync");
             return _baseResponse;
         }
+        #endregion
+
+        #region Get
         /// <summary>
         /// Список изображений (возможно приминение поиска)
         /// </summary>
@@ -123,6 +144,9 @@
             _logger.LogInformation($"Ответ отправлен контролеру/ method: GetServiceAsync");
             return bResponse;
         }
+        #endregion
+
+        #region Update
         /// <summary>
         /// Обновление изображения.
         /// </summary>
@@ -141,13 +165,25 @@
             }
             else
             {
-                var image = await _imageRep.UpdateAsync(_mapper.Map<Image>(updateModel), carent); ;
+                var image = _mapper.Map<Image>(updateModel);
+                if (image.ImageUrl is null)
+                {
+                    image = await _cloudinary.AddImageAsync(updateModel.FileImage!, image.ProductId);
+                }
+                else
+                {
+                    image = await _cloudinary.UpdateImageAsync(updateModel.FileImage!, image.ProductId, updateModel.ImageId!);
+                }
+                var imageRep = await _imageRep.UpdateAsync(image!, carent); ;
                 _baseResponse.DisplayMessage = "Изображение обновилось.";
-                _baseResponse.Result = _mapper.Map<ImageDTO>(image);
+                _baseResponse.Result = _mapper.Map<ImageDTO>(imageRep);
             }
             _logger.LogInformation($"Ответ отправлен контролеру/ method: UpdateServiceAsync");
             return _baseResponse;
         }
+        #endregion
+
+        #region Filter
         /// <summary>
         /// Фильтр и поиск изображения по значению
         /// </summary>
@@ -181,33 +217,6 @@
             _logger.LogInformation($"Ответ отправлен GetServiceAsync/ method: FilterAsync");
             return (images, message);
         }
-
-        /// <summary>
-        /// Поиск изображения по значению 
-        /// </summary>
-        /// <param name="images"></param>
-        /// <param name="search"></param>
-        /// <returns>Искомые изображении и сообщение</returns>
-        //private async Task<(IEnumerable<Image>?, string)> SearchAsync(IEnumerable<Image>? images, string search)
-        //{
-        //    WatchLogger.Log($"Поиск изображения по: {search}. / method: SearchAsync");
-        //    await Task.Factory.StartNew(() =>
-        //    {
-        //        images = images.Where(
-        //            x => EF.Functions.Like(x.ImageUrl.ToUpper(), $"%{search.ToUpper()}%"));
-        //    });
-        //    if (images.Count() is 0)
-        //    {
-        //        WatchLogger.Log(message + $"\n по поиску: {search} не чего не найдено.");
-        //        message += $"\n по поиску: {search} не чего не найдено.";
-        //    }
-        //    else
-        //    {
-        //        WatchLogger.Log(message + $"\n по попоиску: {search}");
-        //        message += $"\n по попоиску: {search}";
-        //    }
-        //    WatchLogger.Log($"Ответ отправлен GetServiceAsync/ method: SearchAsync");
-        //    return (images, message);
-        //}
+        #endregion
     }
 }

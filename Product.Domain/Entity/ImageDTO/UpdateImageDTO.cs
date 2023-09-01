@@ -1,17 +1,8 @@
 ﻿namespace ProductAPI.Domain.Entity.ImageDTO
 {
-    public record struct UpdateImageDTO
-    {
-        public UpdateImageDTO(int imageId, string imageUrl)
-        {
-            ImageId = imageId;
-            ImageUrl = imageUrl;
-        }
-
-        [Required(ErrorMessage = "Укажите id изображения.")]
-        public int ImageId { get; init; }
-        [StringLength(int.MaxValue, MinimumLength = 5, ErrorMessage = "Длина url адреса должна быть не менее 5 символов")]
-        [Url(ErrorMessage = "Не веерно введен url адрес")]
-        public string ImageUrl { get; init; } = string.Empty;
-    }
+    public record UpdateImageDTO(
+        [Required(ErrorMessage = "Укажите id продукта.")] int ProductId,
+        [Required(ErrorMessage = "Укажите id изображения.")]string ImageId,
+        [Required(ErrorMessage = "Укажите файл.")]IFormFile FileImage
+    );
 }
